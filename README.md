@@ -16,7 +16,7 @@
 
 
 
-其余请使用如下命令，以获得相关包：
+*其余请使用如下命令，以获得相关包：
 
 `python -m pip install -r requirements.txt` 
 

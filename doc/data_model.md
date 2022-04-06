@@ -75,7 +75,7 @@
 | id      | int            | PRIMARY KEY, AUTO_INCREMENT | 该条刷题记录的id           |
 | user_id | int            | FOREIGN KEY(UserTable(id))  | 该条刷题记录所属用户的id   |
 | que_id  | int            | FOREIGN KEY(Question(id))   | 该条刷题记录所对应题目的id |
-| date    | datatime       | NOT NULL                    | 用户完成该题目的时间       |
+| date    | datetime       | NOT NULL                    | 用户完成该题目的时间       |
 
 
 
@@ -86,7 +86,7 @@
 | id        | int            | PRIMARY KEY, AUTO_INCREMENT                                  | 该错题记录的id             |
 | user_id   | int            | FOREIGN KEY(UserTable(id))                                   | 该条错题记录所属用户的id   |
 | que_id    | int            | FOREIGN KEY(Question(id))                                    | 该条错题记录所对应题目的id |
-| date      | datatime       | NOT NULL                                                     | 用户完成该题目的时间       |
+| date      | datetime       | NOT NULL                                                     | 用户完成该题目的时间       |
 | right_num | int            | CHECK(Question(id)=que_id AND right_num >=0 AND right_num <= Question(num)) | 用户答对该题的小题数       |
 
 
@@ -115,4 +115,14 @@
 | choice_que  | int            | CHECK(>=0)                  | 该用户近期答对选择题的数量   |
 | cloze_que   | int            | CHECK(>=0)                  | 该用户近期答对完形小题的数量 |
 | reading_que | int            | CHECK(>=0)                  | 该用户近期答对阅读小题的数量 |
+
+
+
+### Notice
+
+| 列名    | 数据类型及精度 | 约束条件                    | 说明         |
+| ------- | -------------- | --------------------------- | ------------ |
+| id      | int            | PRIMARY KEY, AUTO_INCREMENT | 此条公告的id |
+| contant | text           | NOT NULL                    | 公告内容     |
+| date    | datetime       | NOT NULL                    | 公告创建时间 |
 

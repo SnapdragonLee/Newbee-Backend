@@ -70,12 +70,11 @@
 
 ### Record
 
-| 列名    | 数据类型及精度 | 约束条件                    | 说明                       |
-| ------- | -------------- | --------------------------- | -------------------------- |
-| id      | int            | PRIMARY KEY, AUTO_INCREMENT | 该条刷题记录的id           |
-| user_id | int            | FOREIGN KEY(UserTable(id))  | 该条刷题记录所属用户的id   |
-| que_id  | int            | FOREIGN KEY(Question(id))   | 该条刷题记录所对应题目的id |
-| date    | datetime       | NOT NULL                    | 用户完成该题目的时间       |
+| 列名    | 数据类型及精度 | 约束条件                                 | 说明                       |
+| ------- | -------------- | ---------------------------------------- | -------------------------- |
+| user_id | int            | FOREIGN KEY(UserTable(id)),  PRIMARY KEY | 该条刷题记录所属用户的id   |
+| que_id  | int            | FOREIGN KEY(Question(id)),  PRIMARY KEY  | 该条刷题记录所对应题目的id |
+| date    | datetime       | NOT NULL                                 | 用户完成该题目的时间       |
 
 
 
@@ -83,11 +82,20 @@
 
 | 列名      | 数据类型及精度 | 约束条件                                                     | 说明                       |
 | --------- | -------------- | ------------------------------------------------------------ | -------------------------- |
-| id        | int            | PRIMARY KEY, AUTO_INCREMENT                                  | 该错题记录的id             |
-| user_id   | int            | FOREIGN KEY(UserTable(id))                                   | 该条错题记录所属用户的id   |
-| que_id    | int            | FOREIGN KEY(Question(id))                                    | 该条错题记录所对应题目的id |
-| date      | datetime       | NOT NULL                                                     | 用户完成该题目的时间       |
+| user_id   | int            | FOREIGN KEY(UserTable(id)), PRIMARY KEY                      | 该条错题记录所属用户的id   |
+| que_id    | int            | FOREIGN KEY(Question(id)), PRIMARY KEY                       | 该条错题记录所对应题目的id |
+| date      | datetime       | NOT NULL                                                     | 用户完成该题的日期         |
 | right_num | int            | CHECK(Question(id)=que_id AND right_num >=0 AND right_num <= Question(num)) | 用户答对该题的小题数       |
+
+
+
+### UserAnswer
+
+| 列名        | 数据类型及精度 | 约束条件                                        | 说明                             |
+| ----------- | -------------- | ----------------------------------------------- | -------------------------------- |
+| sub_que_id  | int            | FOREIGN KEY(SubQuestion(id)),  PRIMARY KEY      | 小题的id                         |
+| user_id     | int            | FOREIGN KEY(UserTable(id)),  PRIMARY KEY        | 用户的id                         |
+| user_answer | varchar(20)    | NOT NULL, CHECK(answer in {"A", "B", "C", "D"}) | 用户最后一次作答此题时提交的答案 |
 
 
 

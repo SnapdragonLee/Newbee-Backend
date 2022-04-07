@@ -15,12 +15,19 @@
 
 ### UserTable
 
-| 列名      | 数据类型及精度 | 约束条件                    | 说明               |
-| --------- | -------------- | --------------------------- | ------------------ |
-| id        | int            | PRIMARY KEY, AUTO_INCREMENT | 用户唯一标识       |
-| openid    | varchar(30)    | PRIMARY KEY                 | 微信提供的唯一标识 |
-| user_name | varchar(20)    | UNIQUE, NOT NULL            | 用户名             |
-| image     | varchar(100)   | NOT NULL                    | 用户头像           |
+| 列名               | 数据类型及精度 | 约束条件         | 说明                         |
+| ------------------ | -------------- | ---------------- | ---------------------------- |
+| id                 | varchar(30)    | PRIMARY KEY      | 微信提供的唯一标识openid     |
+| user_name          | varchar(20)    | UNIQUE, NOT NULL | 用户名                       |
+| recent_choice_que  | int            | CHECK(>=0)       | 该用户近期答对选择题的数量   |
+| recent_cloze_que   | int            | CHECK(>=0)       | 该用户近期答对完形小题的数量 |
+| recent_reading_que | int            | CHECK(>=0)       | 该用户近期答对阅读小题的数量 |
+| total_choice_que   | int            | CHECK(>=0)       | 用户做过的选择题的总数       |
+| right_choice_que   | int            | CHECK(>=0)       | 用户做对的选择题的数量       |
+| total_reading_que  | int            | CHECK(>=0)       | 用户做过的阅读小题的总数     |
+| right_reading_que  | int            | CHECK(>=0)       | 用户做对的阅读小题的数量     |
+| total_cloze_que    | int            | CHECK(>=0)       | 用户做过的完形小题的总数     |
+| right_cloze_que    | int            | CHECK(>=0)       | 用户做对的完形小题的数量     |
 
 
 
@@ -72,7 +79,7 @@
 
 | 列名    | 数据类型及精度 | 约束条件                                 | 说明                       |
 | ------- | -------------- | ---------------------------------------- | -------------------------- |
-| user_id | int            | FOREIGN KEY(UserTable(id)),  PRIMARY KEY | 该条刷题记录所属用户的id   |
+| user_id | varchar(30)    | FOREIGN KEY(UserTable(id)),  PRIMARY KEY | 该条刷题记录所属用户的id   |
 | que_id  | int            | FOREIGN KEY(Question(id)),  PRIMARY KEY  | 该条刷题记录所对应题目的id |
 | date    | datetime       | NOT NULL                                 | 用户完成该题目的时间       |
 
@@ -82,7 +89,7 @@
 
 | 列名      | 数据类型及精度 | 约束条件                                                     | 说明                       |
 | --------- | -------------- | ------------------------------------------------------------ | -------------------------- |
-| user_id   | int            | FOREIGN KEY(UserTable(id)), PRIMARY KEY                      | 该条错题记录所属用户的id   |
+| user_id   | varchar(30)    | FOREIGN KEY(UserTable(id)), PRIMARY KEY                      | 该条错题记录所属用户的id   |
 | que_id    | int            | FOREIGN KEY(Question(id)), PRIMARY KEY                       | 该条错题记录所对应题目的id |
 | date      | datetime       | NOT NULL                                                     | 用户完成该题的日期         |
 | right_num | int            | CHECK(Question(id)=que_id AND right_num >=0 AND right_num <= Question(num)) | 用户答对该题的小题数       |
@@ -94,35 +101,8 @@
 | 列名        | 数据类型及精度 | 约束条件                                        | 说明                             |
 | ----------- | -------------- | ----------------------------------------------- | -------------------------------- |
 | sub_que_id  | int            | FOREIGN KEY(SubQuestion(id)),  PRIMARY KEY      | 小题的id                         |
-| user_id     | int            | FOREIGN KEY(UserTable(id)),  PRIMARY KEY        | 用户的id                         |
+| user_id     | varchar(30)    | FOREIGN KEY(UserTable(id)),  PRIMARY KEY        | 用户的id                         |
 | user_answer | varchar(20)    | NOT NULL, CHECK(answer in {"A", "B", "C", "D"}) | 用户最后一次作答此题时提交的答案 |
-
-
-
-### Statistic
-
-| 列名              | 数据类型及精度 | 约束条件                    | 说明                     |
-| ----------------- | -------------- | --------------------------- | ------------------------ |
-| id                | int            | PRIMARY KEY, AUTO_INCREMENT | 该条统计的id             |
-| user_id           | int            | FOREIGN KEY(UserTable(id))  | 该条统计所属的用户id     |
-| choice_que_total  | int            | CHECK(>=0)                  | 用户做过的选择题的总数   |
-| choice_que_right  | int            | CHECK(>=0)                  | 用户做对的选择题的数量   |
-| reading_que_total | int            | CHECK(>=0)                  | 用户做过的阅读小题的总数 |
-| reading_que_right | int            | CHECK(>=0)                  | 用户做对的阅读小题的数量 |
-| cloze_que_total   | int            | CHECK(>=0)                  | 用户做过的完形小题的总数 |
-| cloze_que_right   | int            | CHECK(>=0)                  | 用户做对的完形小题的数量 |
-
-
-
-### Rank
-
-| 列名        | 数据类型及精度 | 约束条件                    | 说明                         |
-| ----------- | -------------- | --------------------------- | ---------------------------- |
-| id          | int            | PRIMARY KEY, AUTO_INCREMENT | 该条排行的id                 |
-| user_id     | int            | FOREIGN KEY(UserTable(id))  | 该条排行所属的用户id         |
-| choice_que  | int            | CHECK(>=0)                  | 该用户近期答对选择题的数量   |
-| cloze_que   | int            | CHECK(>=0)                  | 该用户近期答对完形小题的数量 |
-| reading_que | int            | CHECK(>=0)                  | 该用户近期答对阅读小题的数量 |
 
 
 

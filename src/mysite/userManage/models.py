@@ -30,5 +30,5 @@ class UserTable(models.Model):
 
     class Meta:
         constraints = [
-            models.CheckConstraint()
+            # models.CheckConstraint()
         ]

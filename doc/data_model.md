@@ -74,6 +74,15 @@
 
 
 
+### QuestionExclude
+
+| 列名    | 数据类型及精度 | 约束条件                                | 说明   |
+| ------- | -------------- | --------------------------------------- | ------ |
+| user_id | varchar(30)    | FOREIGN KEY(UserTable(id)), PRIMARY KEY | 用户id |
+| que_id  | int            | FOREIGN KEY(Question(id)), PRIMARY KEY  | 题目id |
+
+
+
 ## 四、用户成绩分析功能
 
 ### Record

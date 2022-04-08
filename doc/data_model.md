@@ -15,19 +15,20 @@
 
 ### UserTable
 
-| 列名               | 数据类型及精度 | 约束条件         | 说明                         |
-| ------------------ | -------------- | ---------------- | ---------------------------- |
-| id                 | varchar(30)    | PRIMARY KEY      | 微信提供的唯一标识openid     |
-| user_name          | varchar(20)    | UNIQUE, NOT NULL | 用户名                       |
-| recent_choice_que  | int            | CHECK(>=0)       | 该用户近期答对选择题的数量   |
-| recent_cloze_que   | int            | CHECK(>=0)       | 该用户近期答对完形小题的数量 |
-| recent_reading_que | int            | CHECK(>=0)       | 该用户近期答对阅读小题的数量 |
-| total_choice_que   | int            | CHECK(>=0)       | 用户做过的选择题的总数       |
-| right_choice_que   | int            | CHECK(>=0)       | 用户做对的选择题的数量       |
-| total_reading_que  | int            | CHECK(>=0)       | 用户做过的阅读小题的总数     |
-| right_reading_que  | int            | CHECK(>=0)       | 用户做对的阅读小题的数量     |
-| total_cloze_que    | int            | CHECK(>=0)       | 用户做过的完形小题的总数     |
-| right_cloze_que    | int            | CHECK(>=0)       | 用户做对的完形小题的数量     |
+| 列名               | 数据类型及精度 | 约束条件                            | 说明                                               |
+| ------------------ | -------------- | ----------------------------------- | -------------------------------------------------- |
+| id                 | varchar(30)    | PRIMARY KEY                         | 微信提供的唯一标识openid                           |
+| user_name          | varchar(20)    | UNIQUE, NOT NULL                    | 用户名                                             |
+| recent_choice_que  | int            | CHECK(>=0)                          | 该用户近期答对选择题的数量                         |
+| recent_cloze_que   | int            | CHECK(>=0)                          | 该用户近期答对完形小题的数量                       |
+| recent_reading_que | int            | CHECK(>=0)                          | 该用户近期答对阅读小题的数量                       |
+| total_choice_que   | int            | CHECK(>=0)                          | 用户做过的选择题的总数                             |
+| right_choice_que   | int            | CHECK(>=0)                          | 用户做对的选择题的数量                             |
+| total_reading_que  | int            | CHECK(>=0)                          | 用户做过的阅读小题的总数                           |
+| right_reading_que  | int            | CHECK(>=0)                          | 用户做对的阅读小题的数量                           |
+| total_cloze_que    | int            | CHECK(>=0)                          | 用户做过的完形小题的总数                           |
+| right_cloze_que    | int            | CHECK(>=0)                          | 用户做对的完形小题的数量                           |
+| status             | int            | NOT NULL, CHECK(type in {"0", "1"}) | 0表示用户正在刷题库中的题，1表示正在刷错题本中的题 |
 
 
 
@@ -77,11 +78,11 @@
 
 ### Record
 
-| 列名    | 数据类型及精度 | 约束条件                                 | 说明                       |
-| ------- | -------------- | ---------------------------------------- | -------------------------- |
-| user_id | varchar(30)    | FOREIGN KEY(UserTable(id)),  PRIMARY KEY | 该条刷题记录所属用户的id   |
-| que_id  | int            | FOREIGN KEY(Question(id)),  PRIMARY KEY  | 该条刷题记录所对应题目的id |
-| date    | datetime       | NOT NULL                                 | 用户完成该题目的时间       |
+| 列名    | 数据类型及精度 | 约束条件                                  | 说明                       |
+| ------- | -------------- | ----------------------------------------- | -------------------------- |
+| date    | datetime       | PRIMARY KEY                               | 用户完成该题目的日期时间   |
+| user_id | varchar(30)    | FOREIGN KEY(UserTable(id)),   PRIMARY KEY | 该条刷题记录所属用户的id   |
+| que_id  | int            | FOREIGN KEY(Question(id))                 | 该条刷题记录所对应题目的id |
 
 
 

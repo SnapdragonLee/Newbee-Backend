@@ -28,12 +28,13 @@ def user_login(request):
     if not user:
         new_user = WXUser(id=openid, user_name='默认用户名')
         new_user.save()
-        user[0] = new_user
 
-    sha = hashlib.sha256()
-    sha.update(openid.encode())
-    sha.update(session_key.encode())
-    key = sha.hexdigest()
-
-    return Response(data={'ret': 0, 'key': key})
+    request.session['openid'] = openid
+    return Response(data={'ret': 0})
+    # sha = hashlib.sha256()
+    # sha.update(openid.encode())
+    # sha.update(session_key.encode())
+    # key = sha.hexdigest()
+    #
+    # return Response(data={'ret': 0, 'key': key})
     pass

@@ -8,6 +8,7 @@ from django.db.models import Q
 
 class WXUser(models.Model):
     id = models.CharField(verbose_name='用户的openid', primary_key=True, max_length=50)
+    order = models.AutoField(verbose_name='用户序号')
     user_name = models.CharField(verbose_name='用户名', unique=True, max_length=20, null=False)
     recent_choice = models.IntegerField(verbose_name='近期答对选择题数', default=0, null=False)
     recent_cloze = models.IntegerField(verbose_name='近期答对完形小题数', default=0, null=False)

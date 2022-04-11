@@ -18,8 +18,7 @@
 | 列名               | 数据类型及精度 | 约束条件                            | 说明                                               |
 | ------------------ | -------------- | ----------------------------------- | -------------------------------------------------- |
 | id                 | varchar(50)    | PRIMARY KEY                         | 微信提供的唯一标识openid                           |
-| order              | int            | AUTO_INCREMENT                      | 用来提供默认用户名的列                             |
-| user_name          | varchar(20)    | UNIQUE, NOT NULL                    | 用户名                                             |
+| user_name          | varchar(20)    | NOT NULL                            | 用户名                                             |
 | recent_choice_que  | int            | CHECK(>=0)                          | 该用户近期答对选择题的数量                         |
 | recent_cloze_que   | int            | CHECK(>=0)                          | 该用户近期答对完形小题的数量                       |
 | recent_reading_que | int            | CHECK(>=0)                          | 该用户近期答对阅读小题的数量                       |

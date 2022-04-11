@@ -26,8 +26,7 @@ def user_login(request):
 
     user = WXUser.objects.filter(id=openid)
     if not user:
-        # TODO 确认默认用户名
-        new_user = WXUser(id=openid, user_name='这里填啥')
+        new_user = WXUser(id=openid, user_name='默认用户名')
         new_user.save()
         user[0] = new_user
 

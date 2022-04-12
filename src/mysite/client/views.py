@@ -1,11 +1,11 @@
 import hashlib
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
-from rest_framework.response import Response
 from rest_framework.decorators import api_view
 import json
 import requests
 from .models import WXUser
+from utils.response import drf_response
 
 
 # Create your views here.
@@ -19,7 +19,7 @@ def user_login(request):
           + '&secret=' + secret + '&js_code=' + code + '&grant_type=authorization_code'
     response = json.loads(requests.get(url).content)
     if 'errcode' in response:
-        return Response(data={'ret': '2'}, status=200)
+        return drf_response(1)
 
     openid = response['openid']
     session_key = response['session_key']
@@ -30,7 +30,7 @@ def user_login(request):
         new_user.save()
 
     request.session['openid'] = openid
-    return Response(data={'ret': 0})
+    return drf_response(0)
     # sha = hashlib.sha256()
     # sha.update(openid.encode())
     # sha.update(session_key.encode())

@@ -60,3 +60,21 @@ admin.site.register(WXUser)
 
 
 
+#### 使用DRF框架的管理平台
+
+比如，管理员登录的这个视图：
+
+```python
+@api_view(['POST'])
+def admin_login(request):
+    username = request.data['name']
+    password = request.data['pwd']
+    user = authenticate(username=username, password=password)
+    if user is not None:
+        login(request, user)
+        return drf_response(0)
+    else:
+        return drf_response(1)
+```
+
+此视图对应的路由是/admin/login/，在浏览器中访问 http://127.0.0.1:8000/admin/login/   ，即可模拟前端向后端发送json，点击post按键，可查看后端返回给前端的json

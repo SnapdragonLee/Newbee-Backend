@@ -20,6 +20,6 @@ urlpatterns = [
     path('DJadmin/', admin.site.urls),
     # path("api/", include("rest_framework.urls", namespace="rest_framework")),
     # path('polls/', include('polls.urls')),
-    path('admin/', include('administrator.urls')),
-    path('user/', include('client.urls'))
+    path('api/admin/', include('administrator.urls')),
+    path('api/user/', include('client.urls'))
 ]

@@ -6,6 +6,6 @@ def drf_response(ret, **data):
         data['ret'] = '0'
         return Response(data=data, status=200)
     elif ret == 1:
-        return Response(data={"ret": '1'}, status=400)
+        return Response(data={"ret": '1'}, status=200)
     elif ret == 2:
-        return Response(data={"ret": '2'}, status=401)
+        return Response(data={"ret": '2'}, status=200)

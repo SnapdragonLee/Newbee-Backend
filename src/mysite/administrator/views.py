@@ -16,7 +16,7 @@ def admin_login(request):
         login(request, user)
         return drf_response(0)
     else:
-        return drf_response(1)
+        return drf_response(3, "用户名或密码错误")
 
 
 @admin_logged

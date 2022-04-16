@@ -19,7 +19,7 @@ def user_login(request):
           + '&secret=' + secret + '&js_code=' + code + '&grant_type=authorization_code'
     response = json.loads(requests.get(url).content)
     if 'errcode' in response:
-        return drf_response(1)
+        return drf_response(3, "获取openid失败")
 
     openid = response['openid']
     session_key = response['session_key']

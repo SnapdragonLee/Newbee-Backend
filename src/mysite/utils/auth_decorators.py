@@ -8,7 +8,7 @@ def admin_logged(func):
     @wraps(func)
     def dec(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return drf_response(1)
+            return drf_response(2)
 
         return func(request, *args, **kwargs)
 
@@ -19,7 +19,7 @@ def user_logged(func):
     @wraps(func)
     def dec(request, *args, **kwargs):
         if 'openid' not in request.session:
-            return drf_response(2)
+            return drf_response(1)
 
         return func(request, *args, **kwargs)
 

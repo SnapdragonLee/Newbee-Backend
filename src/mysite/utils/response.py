@@ -1,10 +1,16 @@
 from rest_framework.response import Response
 
 
-def drf_response(ret, **data):
+def drf_response(ret, msg='', **data):
     if ret == 0:
-        return Response(data={"ret": 0, "msg": "admin login success"}, status=200)
+        data["ret"] = 0
+        data["msg"] = msg
+        return Response(data=data, status=200)
     elif ret == 1:
-        return Response(data={"ret": 1, "msg": "No user find in admin db"}, status=200)
+        return Response(data={"ret": 1, "msg": "User is not logged in"}, status=200)
     elif ret == 2:
-        return Response(data={"ret": 2, "msg": "No user find in user db"}, status=200)
+        return Response(data={"ret": 2, "msg": "Administrator is not logged in"}, status=200)
+    elif ret == 3:
+        data["ret"] = 3
+        data["msg"] = msg
+        return Response(data=data, status=200)

@@ -1,26 +1,30 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
-from rest_framework.decorators import api_view
-from utils.response import drf_response
+from utils.response import wrap_response_data
 from utils.auth_decorators import admin_logged
+from django.http import JsonResponse
 
 
 # Create your views here.
-@api_view(['POST'])
 def admin_login(request):
-    username = request.data['name']
-    password = request.data['pwd']
+    username = request.POST['name']
+    password = request.POST['pwd']
     user = authenticate(username=username, password=password)
     if user is not None:
         login(request, user)
-        return drf_response(0)
-    else:
-        return drf_response(3, "用户名或密码错误")
+        return JsonResponse(data=wrap_response_data(0))
 
+    else:
+        return JsonResponse(data=wrap_response_data(3, "用户名或密码错误"))
 
 @admin_logged
-@api_view(['DELETE'])
 def admin_logout(request):
     logout(request)
-    return drf_response(0)
+    return JsonResponse(data=wrap_response_data(0))
+
+@admin_logged
+def get_name(request):
+    data = {'name': request.data.user.username}
+    return JsonResponse(data=wrap_response_data(0, **data))
+

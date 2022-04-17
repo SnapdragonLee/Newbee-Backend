@@ -8,3 +8,4 @@ urlpatterns = [
     path('list_user/', views.ListUser.as_view(), name="admin_list_user"),
     path('designated_user/',views.DesignatedUser.as_view(),name='admin_designated_user')
 ]
+

@@ -28,6 +28,34 @@ python -m pip install -r requirements.txt
 
 
 
+### Backend 搭配 vue 前端静态显示
+
+在 vue 前端运行指令：
+
+```bash
+npm install
+npm run build
+```
+
+
+
+之后将 `frontend/` 下的 `dist` 目录拷贝至 `backend/src/mysite/` 下。
+
+此时，直接启动 Django 后端，即可看到前端的静态页面：
+
+```bash
+cd src/mysite/
+python manage.py runserver 8000
+```
+
+
+
+**千万不要擅自改动 `backend/src/mysite/mysite/settings.py` 中的配置！不要问我为什么！**
+
+**千万不要擅自改动 `backend/src/mysite/mysite/settings.py` 中的配置！不要问我为什么！**
+
+
+
 ### Backend 小组成员
 
 李霄龙 姜田龙 张昊雨

@@ -39,6 +39,7 @@
 | 列名        | 数据类型及精度 | 约束条件                                                     | 说明                             |
 | ----------- | -------------- | ------------------------------------------------------------ | -------------------------------- |
 | id          | int            | PRIMARY KEY, AUTO_INCREMENT                                  | 题目唯一标识                     |
+| titile      | text           | NOT NULL                                                     | 题目的标题                       |
 | type        | varchar(20)    | NOT NULL, CHECK(type in {"选择", "阅读", "完形"})            | 题目类型                         |
 | text        | text           | CHECK((type='选择' AND text IS NULL) OR text IS NOT NULL)    | 阅读、完形的文章，选择题此项为空 |
 | sub_que_num | int            | CHECK((type='选择' AND sub_que_num = 1) OR sub_que_num >=1 ) | 该题目所含小题数量               |

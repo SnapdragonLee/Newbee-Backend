@@ -20,6 +20,9 @@ class WXUser(models.Model):
     right_reading = models.IntegerField(verbose_name='做对的阅读题小题数', default=0, null=False)
     status = models.IntegerField(verbose_name="刷题阶段", default=0, null=False)
 
+    def __str__(self):
+        return self.id
+
     def save(self, *args, **kwargs):
         try:
             self.full_clean()

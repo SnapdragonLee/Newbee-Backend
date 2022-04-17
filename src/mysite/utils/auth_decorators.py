@@ -9,7 +9,6 @@ def admin_logged(func):
         if not request.user.is_authenticated:
             return JsonResponse(data=wrap_response_data(2))
 
-        print(request.user.username)
         return func(request, *args, **kwargs)
 
     return dec

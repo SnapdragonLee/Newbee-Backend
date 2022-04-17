@@ -60,7 +60,11 @@ class ListUser(View):
     def delete(self, request):
         id_list = request.GET.getlist('userid')  #根据赵佬的提醒获取DELETE的参数也得用GET
         for user_id in id_list:
-            client_models.WXUser.objects.get(id=user_id).delete()
+            try:
+                client_models.WXUser.objects.get(id=user_id).delete()
+            except:
+                pass
+
         data = {}
         return JsonResponse(data=wrap_response_data(0, **data))
 
@@ -74,3 +78,8 @@ class DesignatedUser(View):
         query_set = client_models.WXUser.objects.filter(user_name=name).order_by('id')
         data = get_user_list(page_number, page_size, query_set)
         return JsonResponse(data=wrap_response_data(0, **data))
+
+class ListQuestion(View):
+    @method_decorator(admin_logged)
+    def get(self,request):
+        pass

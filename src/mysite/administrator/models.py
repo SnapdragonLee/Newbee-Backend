@@ -8,12 +8,14 @@ from utils.defines import *
 class Question(models.Model):
     id = models.AutoField(verbose_name='题目id', primary_key=True)
     title = models.TextField(verbose_name='题目标题', null=False)
-    que_type = models.CharField(verbose_name='题目类型', max_length=20,
-                                choices=(
-                                    (choice_que_name, '选择'),
-                                    (cloze_que_name, '完形'),
-                                    (reading_que_name, '阅读')
-                                ), default=choice_que_name)
+
+    type = models.CharField(verbose_name='题目类型', max_length=20,
+                            choices=(
+                                (choice_que_name, '选择'),
+                                (cloze_que_name, '完形'),
+                                (reading_que_name, '阅读')
+                            ), default=choice_que_name
+                            )
 
     text = models.TextField(verbose_name='文章', null=True, blank=True)
     sub_que_num = models.IntegerField(verbose_name='子问题数量', null=False)
@@ -31,9 +33,9 @@ class Question(models.Model):
 
     class Meta:
         constraints = [
-            models.CheckConstraint(check=(Q(que_type=choice_que_name) & Q(text__isnull=True)) | Q(text__isnull=False),
+            models.CheckConstraint(check=(Q(type=choice_que_name) & Q(text__isnull=True)) | Q(text__isnull=False),
                                    name='check_text'),
-            models.CheckConstraint(check=(Q(que_type=choice_que_name) & Q(sub_que_num=1)) | Q(sub_que_num__gte=1),
+            models.CheckConstraint(check=(Q(type=choice_que_name) & Q(sub_que_num=1)) | Q(sub_que_num__gte=1),
                                    name='check_sub_que_num'),
 
         ]
@@ -62,17 +64,9 @@ class SubQuestion(models.Model):
     def save(self, *args, **kwargs):
         try:
             # 先判断，完形题的小题题干为空，非完形题的小题题干不为空
-            if not ((self.question.que_type == cloze_que_name and self.stem is None) or (self.stem is not None)):
+            if not ((self.question.type == cloze_que_name and self.stem is None) or (self.stem is not None)):
                 raise ValidationError
             self.full_clean()
             super().save(*args, **kwargs)
         except ValidationError as e:
             raise e
-
-    # class Meta:
-    #     constraints = [
-    #         models.CheckConstraint(
-    #             check=(Q(question__que_type=cloze_que_name) & Q(stem__isnull=True)) | Q(stem__isnull=False),
-    #             name='check_stem'),
-    #
-    #     ]

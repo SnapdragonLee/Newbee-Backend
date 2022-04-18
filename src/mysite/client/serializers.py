@@ -24,3 +24,4 @@ class ListUserSerializer(serializers.ModelSerializer):
             #这个fields列表中的字符串就是字段名
             #这样序列化器生成的字典中的key值与字段名相同
     '''
+

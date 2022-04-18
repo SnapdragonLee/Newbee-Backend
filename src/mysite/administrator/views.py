@@ -9,6 +9,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from client import models as client_models
 from . import models as admin_models
 from client.serializers import ListUserSerializer
+from .serializers import ListQuestionSerializer,DesignatedQuestionSerializer
 from django.core import serializers
 from django.utils.decorators import method_decorator
 import json
@@ -59,7 +60,7 @@ class ListUser(View):
 
     @method_decorator(admin_logged)
     def delete(self, request):
-        id_list = request.GET.getlist('userid')  #根据赵佬的提醒获取DELETE的参数也得用GET
+        id_list = request.GET.getlist('userid')  # 根据赵佬的提醒获取DELETE的参数也得用GET
         for user_id in id_list:
             try:
                 client_models.WXUser.objects.get(id=user_id).delete()
@@ -80,14 +81,33 @@ class DesignatedUser(View):
         data = get_user_list(page_number, page_size, query_set)
         return JsonResponse(data=wrap_response_data(0, **data))
 
+
 class ListQuestion(View):
     @method_decorator(admin_logged)
-    def get(self,request):
+    def get(self, request):
         page_number = request.GET['pagenumber']
         page_size = request.GET['pagesize']
         que_type = request.GET['type']
         query_set = admin_models.Question.objects.filter(type=que_type).order_by('title')
-        paginator = Paginator(query_set,page_size)
+        paginator = Paginator(query_set, page_size)
         que_list = paginator.get_page(page_number).object_list
-        total = len(query_set)
+        total = query_set.count()
+        serializer = ListQuestionSerializer(que_list, many=True)
+        data = {'list': json.loads(json.dumps(serializer.data)),
+                'total': total}
+        return JsonResponse(data=wrap_response_data(0, **data))
 
+
+class DesignatedQuestion(View):
+    @method_decorator(admin_logged)
+    def get(self, request):
+        id = request.GET['id']
+        data = {}
+        try:
+            que = admin_models.Question.objects.get(id=id)
+        except:
+            return JsonResponse(data=wrap_response_data(3, '题目id不存在', **data))
+
+        serializer = DesignatedQuestionSerializer(que)
+        data = {'list': json.loads(json.dumps(serializer.data))}
+        return JsonResponse(data=wrap_response_data(0, **data))

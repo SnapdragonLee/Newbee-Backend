@@ -6,8 +6,8 @@
 
 首先需建立超级账户，账户名密码自行设置，邮箱可为空：
 
-```
-python manage.py createsuperuser
+```bash
+$ python manage.py createsuperuser
 Username (leave blank to use 'root'): admin
 Email address: 
 Password:

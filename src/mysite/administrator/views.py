@@ -9,7 +9,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from client import models as client_models
 from . import models as admin_models
 from client.serializers import ListUserSerializer
-from .serializers import ListQuestionSerializer,DesignatedQuestionSerializer
+from .serializers import ListQuestionSerializer,DesignatedQuestionSerializer,SubQuestionSerializer
 from django.core import serializers
 from django.utils.decorators import method_decorator
 import json
@@ -109,5 +109,11 @@ class DesignatedQuestion(View):
             return JsonResponse(data=wrap_response_data(3, '题目id不存在', **data))
 
         serializer = DesignatedQuestionSerializer(que)
-        data = {'list': json.loads(json.dumps(serializer.data))}
+        data = json.loads(json.dumps(serializer.data))
+
+        sub_question_query_set = admin_models.SubQuestion.objects.filter(question__id=id)
+        serializer = SubQuestionSerializer(sub_question_query_set,many=True)
+        sub_question_json_list = json.loads(json.dumps(serializer.data))
+        data['sub_que'] = sub_question_json_list
+
         return JsonResponse(data=wrap_response_data(0, **data))

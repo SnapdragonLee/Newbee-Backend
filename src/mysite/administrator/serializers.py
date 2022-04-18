@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Question
+from .models import Question, SubQuestion
+from rest_framework.serializers import SerializerMethodField
 
 
 class ListQuestionSerializer(serializers.ModelSerializer):
@@ -10,13 +11,19 @@ class ListQuestionSerializer(serializers.ModelSerializer):
         fields = ['text', 'sub_que_num', 'id']
 
 
-
-class DesignatedQuestionSerializer(serializers.ModelSerializer):
-
-
+class SubQuestionSerializer(serializers.ModelSerializer):
+    options = SerializerMethodField()
 
     class Meta:
+        model = SubQuestion
+        fields = ['id', 'stem', 'answer', 'options']
+
+    def get_options(self, sub_question):
+        data = [sub_question.A, sub_question.B, sub_question.C, sub_question.D]
+        return data
+
+
+class DesignatedQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
         model = Question
-        fields = ['title','text', 'sub_que_num', 'id']
-
-
+        fields = ['id', 'title', 'text', 'sub_que_num']

@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.views.generic.base import View
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from client import models as client_models
+from . import models as admin_models
 from client.serializers import ListUserSerializer
 from django.core import serializers
 from django.utils.decorators import method_decorator
@@ -34,7 +35,7 @@ def admin_logout(request):
 
 @admin_logged
 def get_name(request):
-    data = {'name': request.data.user.username}
+    data = {'name': request.user.username}
     return JsonResponse(data=wrap_response_data(0, **data))
 
 
@@ -82,4 +83,11 @@ class DesignatedUser(View):
 class ListQuestion(View):
     @method_decorator(admin_logged)
     def get(self,request):
-        pass
+        page_number = request.GET['pagenumber']
+        page_size = request.GET['pagesize']
+        que_type = request.GET['type']
+        query_set = admin_models.Question.objects.filter(type=que_type).order_by('title')
+        paginator = Paginator(query_set,page_size)
+        que_list = paginator.get_page(page_number).object_list
+        total = len(query_set)
+

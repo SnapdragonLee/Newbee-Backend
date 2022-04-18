@@ -11,7 +11,7 @@ class ListUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WXUser
-        fields = ['name', "numm", 'numc', 'numr']
+        fields = ['name', "numm", 'numc', 'numr','id']
 
     #这里之所以这么写，是因为前端需要的json中的key值，为name、numm、numc、numr故也需要在序列化时，把key的名字改成这些
     #如果前端要求json中key的值与模型中的字段名相同，则可以按以下写法

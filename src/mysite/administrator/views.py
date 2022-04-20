@@ -9,10 +9,12 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from client import models as client_models
 from . import models as admin_models
 from client.serializers import ListUserSerializer
-from .serializers import ListQuestionSerializer,DesignatedQuestionSerializer,SubQuestionSerializer
+from .serializers import ListQuestionSerializer, DesignatedQuestionSerializer, SubQuestionSerializer
 from django.core import serializers
 from django.utils.decorators import method_decorator
 import json
+from utils.defines import *
+from django.core.exceptions import ValidationError
 
 
 # Create your views here.
@@ -61,14 +63,17 @@ class ListUser(View):
     @method_decorator(admin_logged)
     def delete(self, request):
         id_list = request.GET.getlist('userid')  # 根据赵佬的提醒获取DELETE的参数也得用GET
+        has_error = False
         for user_id in id_list:
             try:
                 client_models.WXUser.objects.get(id=user_id).delete()
             except:
-                pass
+                has_error = True
 
-        data = {}
-        return JsonResponse(data=wrap_response_data(0, **data))
+        if has_error:
+            return JsonResponse(data=wrap_response_data(3, '部分或全部用户id不存在'))
+        else:
+            return JsonResponse(data=wrap_response_data(0))
 
 
 class DesignatedUser(View):
@@ -88,10 +93,16 @@ class ListQuestion(View):
         page_number = request.GET['pagenumber']
         page_size = request.GET['pagesize']
         que_type = request.GET['type']
-        query_set = admin_models.Question.objects.filter(type=que_type).order_by('title')
+        que_title = str(request.GET.get('title'))
+
+        if que_title is None or not que_title.strip():
+            query_set = admin_models.Question.objects.filter(type=que_type).order_by('title')
+        else:
+            query_set = admin_models.Question.objects.filter(type=que_type, title__contains=que_title).order_by('title')
+
         paginator = Paginator(query_set, page_size)
         que_list = paginator.get_page(page_number).object_list
-        total = query_set.count()
+        total = len(query_set)
         serializer = ListQuestionSerializer(que_list, many=True)
         data = {'list': json.loads(json.dumps(serializer.data)),
                 'total': total}
@@ -101,19 +112,65 @@ class ListQuestion(View):
 class DesignatedQuestion(View):
     @method_decorator(admin_logged)
     def get(self, request):
-        id = request.GET['id']
+        que_id = request.GET['id']
         data = {}
         try:
-            que = admin_models.Question.objects.get(id=id)
+            que = admin_models.Question.objects.get(id=que_id)
         except:
             return JsonResponse(data=wrap_response_data(3, '题目id不存在', **data))
 
         serializer = DesignatedQuestionSerializer(que)
         data = json.loads(json.dumps(serializer.data))
 
-        sub_question_query_set = admin_models.SubQuestion.objects.filter(question__id=id)
-        serializer = SubQuestionSerializer(sub_question_query_set,many=True)
+        sub_question_query_set = admin_models.SubQuestion.objects.filter(question__id=que_id)
+        serializer = SubQuestionSerializer(sub_question_query_set, many=True)
         sub_question_json_list = json.loads(json.dumps(serializer.data))
         data['sub_que'] = sub_question_json_list
 
         return JsonResponse(data=wrap_response_data(0, **data))
+
+    @method_decorator(admin_logged)
+    def post(self, request):
+        try:
+            que_type = request.GET['type']
+            que_title = request.GET['title']
+            que_text = request.GET.get('text', default='')
+            sub_que_num = request.GET['sub_que_num']
+
+            if que_type == CHOICE_QUE_NAME:
+                new_question = admin_models.Question(type=que_type, title=que_title, sub_que_num=sub_que_num)
+            else:
+                new_question = admin_models.Question(type=que_type, title=que_title, sub_que_num=sub_que_num,
+                                                     text=que_text)
+
+            new_question.save()
+        except Exception:
+            return JsonResponse(data=wrap_response_data(3, '父问题格式不正确'))
+
+        created_sub_que_id_list = []
+        try:
+            sub_que_list = request.GET.getlist('sub_que')
+            father_id = new_question.id
+            if len(sub_que_list) != sub_que_num:
+                raise ValidationError
+
+            for sub_que in sub_que_list:
+                if que_type == CLOZE_QUE_NAME:
+                    new_sub_question = admin_models.SubQuestion(question=father_id, answer=sub_que['answer'],
+                                                                A=sub_que['options'][0], B=sub_que['options'][1],
+                                                                C=sub_que['options'][2], D=sub_que['options'][3])
+                else:
+                    new_sub_question = admin_models.SubQuestion(question=father_id, stem=sub_que['stem'],
+                                                                answer=sub_que['answer'],
+                                                                A=sub_que['options'][0], B=sub_que['options'][1],
+                                                                C=sub_que['options'][2], D=sub_que['options'][3]
+                                                                )
+
+                new_sub_question.save()
+                created_sub_que_id_list.append(new_sub_question.id)
+        except Exception:
+            for created_sub_que_id in created_sub_que_id_list:
+                admin_models.SubQuestion.objects.filter(id=created_sub_que_id).delete()
+            return JsonResponse(data=wrap_response_data(3, '子问题格式不正确'))
+
+        return JsonResponse(data=wrap_response_data(0, '题目上传成功'))

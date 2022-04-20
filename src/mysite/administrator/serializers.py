@@ -4,11 +4,11 @@ from rest_framework.serializers import SerializerMethodField
 
 
 class ListQuestionSerializer(serializers.ModelSerializer):
-    text = serializers.CharField(source='title')
+    # title = serializers.CharField(source='title')
 
     class Meta:
         model = Question
-        fields = ['text', 'sub_que_num', 'id']
+        fields = ['title', 'sub_que_num', 'id']
 
 
 class SubQuestionSerializer(serializers.ModelSerializer):

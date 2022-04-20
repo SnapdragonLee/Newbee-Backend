@@ -11,10 +11,10 @@ class Question(models.Model):
 
     type = models.CharField(verbose_name='题目类型', max_length=20,
                             choices=(
-                                (choice_que_name, '选择'),
-                                (cloze_que_name, '完形'),
-                                (reading_que_name, '阅读')
-                            ), default=choice_que_name
+                                (CHOICE_QUE_NAME, '选择'),
+                                (CLOZE_QUE_NAME, '完形'),
+                                (READING_QUE_NAME, '阅读')
+                            ), default=CHOICE_QUE_NAME
                             )
 
     text = models.TextField(verbose_name='文章', null=True, blank=True)
@@ -33,9 +33,9 @@ class Question(models.Model):
 
     class Meta:
         constraints = [
-            models.CheckConstraint(check=(Q(type=choice_que_name) & Q(text__isnull=True)) | Q(text__isnull=False),
+            models.CheckConstraint(check=(Q(type=CHOICE_QUE_NAME) & Q(text__isnull=True)) | Q(text__isnull=False),
                                    name='check_text'),
-            models.CheckConstraint(check=(Q(type=choice_que_name) & Q(sub_que_num=1)) | Q(sub_que_num__gte=1),
+            models.CheckConstraint(check=(Q(type=CHOICE_QUE_NAME) & Q(sub_que_num=1)) | Q(sub_que_num__gte=1),
                                    name='check_sub_que_num'),
 
         ]
@@ -64,7 +64,7 @@ class SubQuestion(models.Model):
     def save(self, *args, **kwargs):
         try:
             # 先判断，完形题的小题题干为空，非完形题的小题题干不为空
-            if not ((self.question.type == cloze_que_name and self.stem is None) or (self.stem is not None)):
+            if not ((self.question.type == CLOZE_QUE_NAME and self.stem is None) or (self.stem is not None)):
                 raise ValidationError
             self.full_clean()
             super().save(*args, **kwargs)

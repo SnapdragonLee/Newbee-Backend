@@ -45,7 +45,7 @@ def get_name(request):
 def get_user_list(page_num, page_size, query_set):
     paginator = Paginator(query_set, page_size)
     user_list = paginator.get_page(page_num).object_list
-    total = len(query_set)
+    total = query_set.count()
     serializer = ListUserSerializer(user_list, many=True)
     return {'list': json.loads(json.dumps(serializer.data)),
             'total': total}
@@ -63,17 +63,17 @@ class ListUser(View):
     @method_decorator(admin_logged)
     def delete(self, request):
         id_list = request.GET.getlist('userid')  # 根据赵佬的提醒获取DELETE的参数也得用GET
-        has_error = False
-        for user_id in id_list:
-            try:
-                client_models.WXUser.objects.get(id=user_id).delete()
-            except:
-                has_error = True
+        user_list = []
+        try:
+            for user_id in id_list:
+                user_list.append(client_models.WXUser.objects.get(id=user_id))
+        except Exception:
+            return JsonResponse(data=wrap_response_data(3, '部分或全部用户id不存在，未执行任何删除操作'))
 
-        if has_error:
-            return JsonResponse(data=wrap_response_data(3, '部分或全部用户id不存在'))
-        else:
-            return JsonResponse(data=wrap_response_data(0))
+        for user in user_list:
+            user.delete()
+
+        return JsonResponse(data=wrap_response_data(0))
 
 
 class DesignatedUser(View):
@@ -93,7 +93,7 @@ class ListQuestion(View):
         page_number = request.GET['pagenumber']
         page_size = request.GET['pagesize']
         que_type = request.GET['type']
-        que_title = str(request.GET.get('title'))
+        que_title = request.GET.get('title')
 
         if que_title is None or not que_title.strip():
             query_set = admin_models.Question.objects.filter(type=que_type).order_by('title')
@@ -102,11 +102,26 @@ class ListQuestion(View):
 
         paginator = Paginator(query_set, page_size)
         que_list = paginator.get_page(page_number).object_list
-        total = len(query_set)
+        total = query_set.count()
         serializer = ListQuestionSerializer(que_list, many=True)
         data = {'list': json.loads(json.dumps(serializer.data)),
                 'total': total}
         return JsonResponse(data=wrap_response_data(0, **data))
+
+    @method_decorator(admin_logged)
+    def delete(self, request):
+        que_id_list = request.GET.getlist('question')
+        question_list = []
+        try:
+            for que_id in que_id_list:
+                question_list.append(admin_models.Question.objects.get(id__exact=que_id))
+        except Exception:
+            return JsonResponse(data=wrap_response_data(3, '部分或全部题目id不存在，未执行任何删除操作'))
+
+        for question in question_list:
+            question.delete()
+
+        return JsonResponse(data=wrap_response_data(0))
 
 
 class DesignatedQuestion(View):

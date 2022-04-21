@@ -132,7 +132,7 @@ class DesignatedQuestion(View):
         try:
             que = admin_models.Question.objects.get(id=que_id)
         except:
-            return JsonResponse(data=wrap_response_data(3, '题目id不存在', **data))
+            return JsonResponse(data=wrap_response_data(3, '题目id不存在'))
 
         serializer = DesignatedQuestionSerializer(que)
         data = json.loads(json.dumps(serializer.data))
@@ -146,12 +146,16 @@ class DesignatedQuestion(View):
 
     @method_decorator(admin_logged)
     def post(self, request):
+
         try:
             que_type = request.POST['type']
             que_title = request.POST['title']
             que_text = request.POST.get('text')
             sub_que_num = request.POST['sub_que_num']
+        except:
+            return JsonResponse(data=wrap_response_data(3, 'request.POST读取父问题数据失败'))
 
+        try:
             if que_type == CHOICE_QUE_NAME:
                 new_question = admin_models.Question(type=que_type, title=que_title, sub_que_num=sub_que_num)
             else:
@@ -163,9 +167,9 @@ class DesignatedQuestion(View):
             return JsonResponse(data=wrap_response_data(3, '父问题格式不正确'))
 
         created_sub_que_id_list = []
+        father_id = new_question.id
         try:
             sub_que_list = request.POST.getlist('sub_que')
-            father_id = new_question.id
             if len(sub_que_list) != sub_que_num:
                 raise ValidationError
 
@@ -185,8 +189,20 @@ class DesignatedQuestion(View):
                 new_sub_question.save()
                 created_sub_que_id_list.append(new_sub_question.id)
         except Exception:
+            admin_models.Question.objects.get(id=father_id).delete()
             for created_sub_que_id in created_sub_que_id_list:
                 admin_models.SubQuestion.objects.filter(id=created_sub_que_id).delete()
             return JsonResponse(data=wrap_response_data(3, '子问题格式不正确'))
 
         return JsonResponse(data=wrap_response_data(0, '题目上传成功'))
+
+    @method_decorator(admin_logged)
+    def put(self, request):
+        try:
+            que_id = request.POST['problemid']
+            que_type = request.POST['type']
+            que_title = request.POST['title']
+            que_text = request.POST.get('text')
+            sub_que_num = request.POST['sub_que_num']
+        except:
+            return JsonResponse(data=wrap_response_data(3, 'request.POST读取父问题数据失败'))

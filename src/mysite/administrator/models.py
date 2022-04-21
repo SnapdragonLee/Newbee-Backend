@@ -23,6 +23,15 @@ class Question(models.Model):
     def __str__(self):
         return self.title
 
+    def clean(self):
+        if not ((self.type == CHOICE_QUE_NAME and (self.text is None or self.text.strip().__len__() == 0)) or
+                (self.type != CHOICE_QUE_NAME and (self.text is not None and self.text.strip().__len__()) > 0)):
+            raise ValidationError
+
+        if not ((self.type == CHOICE_QUE_NAME and self.sub_que_num == 1) or (
+                self.type != CHOICE_QUE_NAME and self.sub_que_num >= 1)):
+            raise ValidationError
+
     # 每个模型类都必须有这个save函数
     def save(self, *args, **kwargs):
         try:
@@ -30,15 +39,6 @@ class Question(models.Model):
             super().save(*args, **kwargs)
         except ValidationError as e:
             raise e
-
-    class Meta:
-        constraints = [
-            models.CheckConstraint(check=(Q(type=CHOICE_QUE_NAME) & Q(text__isnull=True)) | Q(text__isnull=False),
-                                   name='check_text'),
-            models.CheckConstraint(check=(Q(type=CHOICE_QUE_NAME) & Q(sub_que_num=1)) | Q(sub_que_num__gte=1),
-                                   name='check_sub_que_num'),
-
-        ]
 
 
 # django默认字段参数中的null和blank都是false，所以以下写法很冗余
@@ -61,16 +61,18 @@ class SubQuestion(models.Model):
     def __str__(self):
         return self.stem
 
+    def clean(self):
+        # 判断，完形题的小题题干为空，非完形题的小题题干不为空
+        if not ((self.question.type == CLOZE_QUE_NAME and self.stem is None) or
+                (self.question.type != CLOZE_QUE_NAME and self.stem is not None)):
+            raise ValidationError
+
+        if not (1 <= self.number <= self.question.sub_que_num):
+            raise ValidationError
+
     # 每个模型类都必须有这个save函数
     def save(self, *args, **kwargs):
         try:
-            # 先判断，完形题的小题题干为空，非完形题的小题题干不为空
-            if not ((self.question.type == CLOZE_QUE_NAME and self.stem is None) or (self.stem is not None)):
-                raise ValidationError
-
-            if not (1 <= self.number <= self.question.sub_que_num):
-                raise ValidationError
-
             self.full_clean()
             super().save(*args, **kwargs)
         except ValidationError as e:

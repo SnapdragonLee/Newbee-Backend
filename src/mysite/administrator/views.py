@@ -147,10 +147,10 @@ class DesignatedQuestion(View):
     @method_decorator(admin_logged)
     def post(self, request):
         try:
-            que_type = request.GET['type']
-            que_title = request.GET['title']
-            que_text = request.GET.get('text', default='')
-            sub_que_num = request.GET['sub_que_num']
+            que_type = request.POST['type']
+            que_title = request.POST['title']
+            que_text = request.POST.get('text')
+            sub_que_num = request.POST['sub_que_num']
 
             if que_type == CHOICE_QUE_NAME:
                 new_question = admin_models.Question(type=que_type, title=que_title, sub_que_num=sub_que_num)
@@ -164,7 +164,7 @@ class DesignatedQuestion(View):
 
         created_sub_que_id_list = []
         try:
-            sub_que_list = request.GET.getlist('sub_que')
+            sub_que_list = request.POST.getlist('sub_que')
             father_id = new_question.id
             if len(sub_que_list) != sub_que_num:
                 raise ValidationError
@@ -172,11 +172,12 @@ class DesignatedQuestion(View):
             for sub_que in sub_que_list:
                 if que_type == CLOZE_QUE_NAME:
                     new_sub_question = admin_models.SubQuestion(question=father_id, answer=sub_que['answer'],
+                                                                number=sub_que['number'],
                                                                 A=sub_que['options'][0], B=sub_que['options'][1],
                                                                 C=sub_que['options'][2], D=sub_que['options'][3])
                 else:
                     new_sub_question = admin_models.SubQuestion(question=father_id, stem=sub_que['stem'],
-                                                                answer=sub_que['answer'],
+                                                                answer=sub_que['answer'], number=sub_que['number'],
                                                                 A=sub_que['options'][0], B=sub_que['options'][1],
                                                                 C=sub_que['options'][2], D=sub_que['options'][3]
                                                                 )

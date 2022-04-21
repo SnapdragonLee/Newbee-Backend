@@ -21,7 +21,7 @@ class Question(models.Model):
     sub_que_num = models.IntegerField(verbose_name='子问题数量', null=False)
 
     def __str__(self):
-        return self.id
+        return self.title
 
     # 每个模型类都必须有这个save函数
     def save(self, *args, **kwargs):
@@ -45,6 +45,7 @@ class Question(models.Model):
 class SubQuestion(models.Model):
     id = models.AutoField(verbose_name='子问题id', primary_key=True)
     question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="父问题的id")
+    number = models.IntegerField(verbose_name='子问题题号')
     stem = models.TextField(verbose_name="子问题题干", null=True, blank=True)
     A = models.TextField(null=False)
     B = models.TextField(null=False)
@@ -58,7 +59,7 @@ class SubQuestion(models.Model):
                                        ('D', 'D')), default='A')
 
     def __str__(self):
-        return self.id
+        return self.stem
 
     # 每个模型类都必须有这个save函数
     def save(self, *args, **kwargs):
@@ -66,6 +67,10 @@ class SubQuestion(models.Model):
             # 先判断，完形题的小题题干为空，非完形题的小题题干不为空
             if not ((self.question.type == CLOZE_QUE_NAME and self.stem is None) or (self.stem is not None)):
                 raise ValidationError
+
+            if not (1 <= self.number <= self.question.sub_que_num):
+                raise ValidationError
+
             self.full_clean()
             super().save(*args, **kwargs)
         except ValidationError as e:

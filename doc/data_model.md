@@ -52,6 +52,7 @@
 | ------ | -------------- | ------------------------------------------------------------ | ---------------------- |
 | id     | int            | PRIMARY KEY, AUTO_INCREMENT                                  | 子问题id               |
 | que_id | int            | FOREIGN KEY(Question(id))                                    | 子问题所属的父问题的id |
+| number | int            | CHECK(number>=1 AND number <= Question(sub_que_num))         | 子问题的题号           |
 | stem   | text           | CHECK((Question(id)=father_id AND Question(type)='完形' AND stem IS NULL) OR stem IS NOT NULL) | 题干内容               |
 | A      | text           | NOT NULL                                                     | A选项内容              |
 | B      | text           | NOT NULL                                                     | B选项内容              |

@@ -32,13 +32,12 @@ class Question(models.Model):
                 self.type != CHOICE_QUE_NAME and self.sub_que_num >= 1)):
             raise ValidationError
 
-    # 每个模型类都必须有这个save函数
-    def save(self, *args, **kwargs):
-        try:
-            self.full_clean()
-            super().save(*args, **kwargs)
-        except ValidationError as e:
-            raise e
+    # def save(self, *args, **kwargs):
+    #     try:
+    #         self.full_clean()
+    #         super().save(*args, **kwargs)
+    #     except ValidationError as e:
+    #         raise e
 
 
 # django默认字段参数中的null和blank都是false，所以以下写法很冗余
@@ -70,10 +69,10 @@ class SubQuestion(models.Model):
         if not (1 <= self.number <= self.question.sub_que_num):
             raise ValidationError
 
-    # 每个模型类都必须有这个save函数
-    def save(self, *args, **kwargs):
-        try:
-            self.full_clean()
-            super().save(*args, **kwargs)
-        except ValidationError as e:
-            raise e
+    # def save(self, *args, **kwargs):
+    #     try:
+    #         self.full_clean()
+    #         super().save(*args, **kwargs)
+    #     except ValidationError as e:
+    #         raise e
+

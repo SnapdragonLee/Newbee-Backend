@@ -146,13 +146,12 @@ class DesignatedQuestion(View):
 
     @method_decorator(admin_logged)
     def post(self, request):
-
         try:
             que_type = request.POST['type']
             que_title = request.POST['title']
             que_text = request.POST.get('text')
             sub_que_num = request.POST['sub_que_num']
-        except:
+        except Exception:
             return JsonResponse(data=wrap_response_data(3, 'request.POST读取父问题数据失败'))
 
         try:
@@ -162,18 +161,20 @@ class DesignatedQuestion(View):
                 new_question = admin_models.Question(type=que_type, title=que_title, sub_que_num=sub_que_num,
                                                      text=que_text)
 
-            new_question.save()
+            new_question.full_clean()
+
         except Exception:
             return JsonResponse(data=wrap_response_data(3, '父问题格式不正确'))
 
-        created_sub_que_id_list = []
+        new_sub_que_obj_list = []
         father_id = new_question.id
-        try:
-            sub_que_list = request.POST.getlist('sub_que')
-            if len(sub_que_list) != sub_que_num:
-                raise ValidationError
 
-            for sub_que in sub_que_list:
+        sub_que_json_list = request.POST.getlist('sub_que')
+        if sub_que_json_list is None or len(sub_que_json_list) != sub_que_num:
+            return JsonResponse(data=wrap_response_data(3, '子问题数量不符'))
+
+        try:
+            for sub_que in sub_que_json_list:
                 if que_type == CLOZE_QUE_NAME:
                     new_sub_question = admin_models.SubQuestion(question=father_id, answer=sub_que['answer'],
                                                                 number=sub_que['number'],
@@ -186,13 +187,14 @@ class DesignatedQuestion(View):
                                                                 C=sub_que['options'][2], D=sub_que['options'][3]
                                                                 )
 
-                new_sub_question.save()
-                created_sub_que_id_list.append(new_sub_question.id)
+                new_sub_question.full_clean()
+                new_sub_que_obj_list.append(new_sub_question)
         except Exception:
-            admin_models.Question.objects.get(id=father_id).delete()
-            for created_sub_que_id in created_sub_que_id_list:
-                admin_models.SubQuestion.objects.filter(id=created_sub_que_id).delete()
             return JsonResponse(data=wrap_response_data(3, '子问题格式不正确'))
+
+        new_question.save()
+        for new_sub_que in new_sub_que_obj_list:
+            new_sub_que.save()
 
         return JsonResponse(data=wrap_response_data(0, '题目上传成功'))
 

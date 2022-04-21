@@ -59,12 +59,12 @@ class SubQuestion(models.Model):
                                        ('D', 'D')), default='A')
 
     def __str__(self):
-        return self.stem
+        return 'id:'+str(self.id) + '   题干:' + self.stem
 
     def clean(self):
         # 判断，完形题的小题题干为空，非完形题的小题题干不为空
-        if not ((self.question.type == CLOZE_QUE_NAME and self.stem is None) or
-                (self.question.type != CLOZE_QUE_NAME and self.stem is not None)):
+        if not ((self.question.type == CLOZE_QUE_NAME and (self.stem is None or self.stem.strip().__len__() == 0)) or
+                (self.question.type != CLOZE_QUE_NAME and (self.stem is not None and self.stem.strip().__len__() > 0))):
             raise ValidationError
 
         if not (1 <= self.number <= self.question.sub_que_num):

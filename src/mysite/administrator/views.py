@@ -184,17 +184,70 @@ class DesignatedQuestion(View):
     @method_decorator(admin_logged)
     def put(self, request):
         try:
-            que_id = request.POST['problemid']
-            que_type = request.POST['type']
-            que_title = request.POST['title']
-            que_text = request.POST.get('text')
-            sub_que_num = request.POST['sub_que_num']
+            father_id = request.POST['problemid']
+            father_type = request.POST['type']
+            father_title = request.POST['title']
+            father_text = request.POST.get('text')
+            father_sub_que_num = request.POST['sub_que_num']
         except Exception as e:
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, 'request.POST读取父题目数据失败'))
 
-        # try:
-        #     father_question = admin_models.Question.objects.get(id=que_id)
-        # except Exception as e:
-        #     print(e.args)
-        #     return JsonResponse(data=wrap_response_data(3, '不存在为该id的题目'))
+        try:
+            father = admin_models.Question.objects.get(id=father_id)
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, '不存在为该id的题目'))
+
+        try:
+            with transaction.atomic():
+                old_child_cnt = father.sub_que_num
+                new_child_cnt = father_sub_que_num
+
+                father.type = father_type
+                father.title = father_title
+                father.text = father_text
+                father.sub_que_num = father_sub_que_num
+                father.save()
+
+                child_query_set = admin_models.SubQuestion.objects.filter(question__id=father_id).order_by('number')
+
+                child_input_list = request.POST.get['sub_que']
+                if child_input_list is None or len(child_input_list) != father_sub_que_num:
+                    raise Exception('子题目数量错误')
+                child_input_list.sort(key=lambda child: child['number'])
+
+                i = 0
+                while i < new_child_cnt:
+                    stem = child_input_list[i]['stem']
+                    A = child_input_list[i]['options'][0]
+                    B = child_input_list[i]['options'][1]
+                    C = child_input_list[i]['options'][2]
+                    D = child_input_list[i]['options'][3]
+                    answer = child_input_list[i]['answer']
+
+                    if i < old_child_cnt:
+                        child_object = child_query_set[i]
+                        child_object.stem = stem
+                        child_object.A = A
+                        child_object.B = B
+                        child_object.C = C
+                        child_object.D = D
+                        child_object.answer = answer
+                    else:
+                        child_object = admin_models.SubQuestion(question=father_id, stem=stem,
+                                                                answer=answer, number=i + 1,
+                                                                A=A, B=B, C=C, D=D)
+
+                    child_object.save()
+                    i += 1
+
+                while i < old_child_cnt:
+                    child_query_set[i].delete()
+                    i += 1
+
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, '题目格式错误'))
+
+        return JsonResponse(data=wrap_response_data(0, '修改成功'))

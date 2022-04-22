@@ -34,7 +34,7 @@ class Question(models.Model):
 
     def save(self, *args, **kwargs):
         try:
-            if self.text.strip().__len__() == 0:
+            if self.text is not None and self.text.strip().__len__() == 0:
                 self.text = None
 
             self.full_clean()
@@ -74,7 +74,7 @@ class SubQuestion(models.Model):
 
     def save(self, *args, **kwargs):
         try:
-            if self.stem.strip().__len__() == 0:
+            if self.stem is not None and self.stem.strip().__len__() == 0:
                 self.stem = None
 
             self.full_clean()

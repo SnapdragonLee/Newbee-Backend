@@ -137,7 +137,7 @@ class DesignatedQuestion(View):
         serializer = DesignatedQuestionSerializer(que)
         data = json.loads(json.dumps(serializer.data))
 
-        sub_question_query_set = admin_models.SubQuestion.objects.filter(question__id=que_id)
+        sub_question_query_set = admin_models.SubQuestion.objects.filter(question__id=que_id).order_by('number')
         serializer = SubQuestionSerializer(sub_question_query_set, many=True)
         sub_question_json_list = json.loads(json.dumps(serializer.data))
         data['sub_que'] = sub_question_json_list

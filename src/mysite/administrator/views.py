@@ -14,6 +14,7 @@ from django.core import serializers
 from django.utils.decorators import method_decorator
 import json
 from utils.defines import *
+from django.db import transaction
 from django.core.exceptions import ValidationError
 
 
@@ -63,15 +64,14 @@ class ListUser(View):
     @method_decorator(admin_logged)
     def delete(self, request):
         id_list = request.GET.getlist('userid')  # 根据赵佬的提醒获取DELETE的参数也得用GET
-        user_list = []
-        try:
-            for user_id in id_list:
-                user_list.append(client_models.WXUser.objects.get(id=user_id))
-        except Exception:
-            return JsonResponse(data=wrap_response_data(3, '部分或全部用户id不存在，未执行任何删除操作'))
 
-        for user in user_list:
-            user.delete()
+        try:
+            with transaction.atomic():
+                for user_id in id_list:
+                    client_models.WXUser.objects.get(id=user_id).delete()
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, '部分或全部用户id不存在，未执行任何删除操作'))
 
         return JsonResponse(data=wrap_response_data(0))
 
@@ -111,15 +111,14 @@ class ListQuestion(View):
     @method_decorator(admin_logged)
     def delete(self, request):
         que_id_list = request.GET.getlist('question')
-        question_list = []
-        try:
-            for que_id in que_id_list:
-                question_list.append(admin_models.Question.objects.get(id__exact=que_id))
-        except Exception:
-            return JsonResponse(data=wrap_response_data(3, '部分或全部题目id不存在，未执行任何删除操作'))
 
-        for question in question_list:
-            question.delete()
+        try:
+            with transaction.atomic():
+                for que_id in que_id_list:
+                    admin_models.Question.objects.get(id__exact=que_id).delete()
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, '部分或全部题目id不存在，未执行任何删除操作'))
 
         return JsonResponse(data=wrap_response_data(0))
 
@@ -128,10 +127,10 @@ class DesignatedQuestion(View):
     @method_decorator(admin_logged)
     def get(self, request):
         que_id = request.GET['id']
-        data = {}
         try:
             que = admin_models.Question.objects.get(id=que_id)
-        except:
+        except Exception as e:
+            print(e.args)
             return JsonResponse(data=wrap_response_data(3, '题目id不存在'))
 
         serializer = DesignatedQuestionSerializer(que)
@@ -151,50 +150,34 @@ class DesignatedQuestion(View):
             que_title = request.POST['title']
             que_text = request.POST.get('text')
             sub_que_num = request.POST['sub_que_num']
-        except Exception:
-            return JsonResponse(data=wrap_response_data(3, 'request.POST读取父问题数据失败'))
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, 'request.POST读取父题目数据失败'))
 
         try:
-            if que_type == CHOICE_QUE_NAME:
-                new_question = admin_models.Question(type=que_type, title=que_title, sub_que_num=sub_que_num)
-            else:
-                new_question = admin_models.Question(type=que_type, title=que_title, sub_que_num=sub_que_num,
-                                                     text=que_text)
+            with transaction.atomic():
+                new_question = admin_models.Question(type=que_type, title=que_title,
+                                                     sub_que_num=sub_que_num, text=que_text)
 
-            new_question.full_clean()
+                new_question.save()
 
-        except Exception:
-            return JsonResponse(data=wrap_response_data(3, '父问题格式不正确'))
+                father_id = new_question.id
+                sub_que_json_list = request.POST.getlist('sub_que')
+                if sub_que_json_list is None or len(sub_que_json_list) != sub_que_num:
+                    raise Exception("子题目数量不符")
 
-        new_sub_que_obj_list = []
-        father_id = new_question.id
-
-        sub_que_json_list = request.POST.getlist('sub_que')
-        if sub_que_json_list is None or len(sub_que_json_list) != sub_que_num:
-            return JsonResponse(data=wrap_response_data(3, '子问题数量不符'))
-
-        try:
-            for sub_que in sub_que_json_list:
-                if que_type == CLOZE_QUE_NAME:
-                    new_sub_question = admin_models.SubQuestion(question=father_id, answer=sub_que['answer'],
-                                                                number=sub_que['number'],
-                                                                A=sub_que['options'][0], B=sub_que['options'][1],
-                                                                C=sub_que['options'][2], D=sub_que['options'][3])
-                else:
-                    new_sub_question = admin_models.SubQuestion(question=father_id, stem=sub_que['stem'],
+                for sub_que in sub_que_json_list:
+                    new_sub_question = admin_models.SubQuestion(question=father_id,
+                                                                stem=sub_que.get('stem', default=None),
                                                                 answer=sub_que['answer'], number=sub_que['number'],
                                                                 A=sub_que['options'][0], B=sub_que['options'][1],
                                                                 C=sub_que['options'][2], D=sub_que['options'][3]
                                                                 )
 
-                new_sub_question.full_clean()
-                new_sub_que_obj_list.append(new_sub_question)
-        except Exception:
-            return JsonResponse(data=wrap_response_data(3, '子问题格式不正确'))
-
-        new_question.save()
-        for new_sub_que in new_sub_que_obj_list:
-            new_sub_que.save()
+                    new_sub_question.save()
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, '题目格式不正确'))
 
         return JsonResponse(data=wrap_response_data(0, '题目上传成功'))
 
@@ -206,5 +189,12 @@ class DesignatedQuestion(View):
             que_title = request.POST['title']
             que_text = request.POST.get('text')
             sub_que_num = request.POST['sub_que_num']
-        except:
-            return JsonResponse(data=wrap_response_data(3, 'request.POST读取父问题数据失败'))
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, 'request.POST读取父题目数据失败'))
+
+        # try:
+        #     father_question = admin_models.Question.objects.get(id=que_id)
+        # except Exception as e:
+        #     print(e.args)
+        #     return JsonResponse(data=wrap_response_data(3, '不存在为该id的题目'))

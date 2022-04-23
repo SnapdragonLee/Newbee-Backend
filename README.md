@@ -30,7 +30,7 @@ python -m pip install -r requirements.txt
 
 ### Backend 搭配 vue 前端静态显示
 
-在 vue 前端运行指令：
+在 vue 前端目录 `frontend/` 运行指令：
 
 ```bash
 npm install
@@ -53,6 +53,8 @@ python manage.py runserver 8000
 **千万不要擅自改动 `backend/src/mysite/mysite/settings.py` 中的配置！不要问我为什么！**
 
 **千万不要擅自改动 `backend/src/mysite/mysite/settings.py` 中的配置！不要问我为什么！**
+
+你也可以根据自己的 OS 和环境，通过使用主仓库中的 `autoLayout.sh`，`autoLayout.bat`，`autoLayout.ps1` 全自动准备联调环境。
 
 
 

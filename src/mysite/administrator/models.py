@@ -90,8 +90,19 @@ class Solution(models.Model):
     likes = models.IntegerField(verbose_name='点赞数')
     reports = models.IntegerField(verbose_name='举报数')
 
+    def __str__(self):
+        return str(self.content)[0:20]
+
     class Meta:
         constraints = [
             models.CheckConstraint(check=Q(likes__gte=0), name='check_likes'),
             models.CheckConstraint(check=Q(reports__gte=0), name='check_reports')
         ]
+
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+            super().save(*args, **kwargs)
+        except ValidationError as e:
+            raise e
+

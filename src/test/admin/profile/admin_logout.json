@@ -1,0 +1,11 @@
+{
+  "test_actor": "admin",
+  "type": "delete",
+  "login_data": {
+    "name": "000",
+    "pwd": "12345678"
+  },
+
+  "test_api": "/api/admin/logout",
+  "data": ""
+}

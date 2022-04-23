@@ -20,8 +20,9 @@ from django.core.exceptions import ValidationError
 
 # Create your views here.
 def admin_login(request):
-    username = request.POST['name']
-    password = request.POST['pwd']
+    post_data = json.loads(request.body)
+    username = post_data['name']
+    password = post_data['pwd']
     user = authenticate(username=username, password=password)
     if user is not None:
         login(request, user)
@@ -145,14 +146,20 @@ class DesignatedQuestion(View):
 
     @method_decorator(admin_logged)
     def post(self, request):
+
         try:
-            que_type = request.POST['type']
-            que_title = request.POST['title']
-            que_text = request.POST.get('text')
-            sub_que_num = request.POST['sub_que_num']
+            post_data = json.loads(request.body)
+            que_type = post_data['type']
+            que_title = post_data['title']
+            que_text = post_data.get('text')
+            sub_que_num = post_data['sub_que_num']
+            sub_que_json_list = post_data['sub_que']
         except Exception as e:
             print(e.args)
-            return JsonResponse(data=wrap_response_data(3, 'request.POST读取父题目数据失败'))
+            return JsonResponse(data=wrap_response_data(3, '提供的参数名称不对，或缺少所需参数'))
+
+        if sub_que_json_list is None or len(sub_que_json_list) != sub_que_num:
+            raise Exception("子题目数量不符")
 
         try:
             with transaction.atomic():
@@ -161,14 +168,9 @@ class DesignatedQuestion(View):
 
                 new_question.save()
 
-                father_id = new_question.id
-                sub_que_json_list = request.POST.getlist('sub_que')
-                if sub_que_json_list is None or len(sub_que_json_list) != sub_que_num:
-                    raise Exception("子题目数量不符")
-
                 for sub_que in sub_que_json_list:
-                    new_sub_question = admin_models.SubQuestion(question=father_id,
-                                                                stem=sub_que.get('stem', default=None),
+                    new_sub_question = admin_models.SubQuestion(question=new_question,
+                                                                stem=sub_que.get('stem'),
                                                                 answer=sub_que['answer'], number=sub_que['number'],
                                                                 A=sub_que['options'][0], B=sub_que['options'][1],
                                                                 C=sub_que['options'][2], D=sub_que['options'][3]
@@ -184,14 +186,21 @@ class DesignatedQuestion(View):
     @method_decorator(admin_logged)
     def put(self, request):
         try:
-            father_id = request.POST['problemid']
-            father_type = request.POST['type']
-            father_title = request.POST['title']
-            father_text = request.POST.get('text')
-            father_sub_que_num = request.POST['sub_que_num']
+            post_data = json.loads(request.body)
+            father_id = post_data['problemid']
+            father_type = post_data['type']
+            father_title = post_data['title']
+            father_text = post_data.get('text')
+            father_sub_que_num = post_data['sub_que_num']
+            child_input_list = post_data['sub_que']
         except Exception as e:
             print(e.args)
-            return JsonResponse(data=wrap_response_data(3, 'request.POST读取父题目数据失败'))
+            return JsonResponse(data=wrap_response_data(3, '提供的参数名称不对，或缺少所需参数'))
+
+        if child_input_list is None or len(child_input_list) != father_sub_que_num:
+            return JsonResponse(data=wrap_response_data(3, '子题目数量不符'))
+
+        child_input_list.sort(key=lambda child: child['number'])
 
         try:
             father = admin_models.Question.objects.get(id=father_id)
@@ -212,11 +221,6 @@ class DesignatedQuestion(View):
 
                 child_query_set = admin_models.SubQuestion.objects.filter(question__id=father_id).order_by('number')
 
-                child_input_list = request.POST.get['sub_que']
-                if child_input_list is None or len(child_input_list) != father_sub_que_num:
-                    raise Exception('子题目数量错误')
-                child_input_list.sort(key=lambda child: child['number'])
-
                 i = 0
                 while i < new_child_cnt:
                     stem = child_input_list[i]['stem']
@@ -235,7 +239,7 @@ class DesignatedQuestion(View):
                         child_object.D = D
                         child_object.answer = answer
                     else:
-                        child_object = admin_models.SubQuestion(question=father_id, stem=stem,
+                        child_object = admin_models.SubQuestion(question=father, stem=stem,
                                                                 answer=answer, number=i + 1,
                                                                 A=A, B=B, C=C, D=D)
 
@@ -251,3 +255,23 @@ class DesignatedQuestion(View):
             return JsonResponse(data=wrap_response_data(3, '题目格式错误'))
 
         return JsonResponse(data=wrap_response_data(0, '修改成功'))
+
+
+class ListSolution(View):
+    @method_decorator(admin_logged)
+    def get(self, request):
+        try:
+            sub_que_id = request.GET['sub_question_id']
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, '获取题解时，提供的参数格式有误'))
+
+        query_set = admin_models.Solution.objects.filter(subQuestion__id=sub_que_id).order_by('-reports')
+
+        total = query_set.count()
+        serializer = SubQuestionSerializer(query_set, many=True)
+
+        data = {'solutions': json.loads(json.dumps(serializer.data)),
+                'total': total}
+
+        return JsonResponse(data=wrap_response_data(0, **data))

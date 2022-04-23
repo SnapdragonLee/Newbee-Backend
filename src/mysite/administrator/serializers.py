@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Question, SubQuestion
+from .models import Question, SubQuestion, Solution
 from rest_framework.serializers import SerializerMethodField
 
 
@@ -27,3 +27,9 @@ class DesignatedQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = ['id', 'title', 'text', 'sub_que_num']
+
+
+class SolutionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Solution
+        fields = ['id', 'content', 'likes', 'reports']

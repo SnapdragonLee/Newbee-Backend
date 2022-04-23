@@ -72,7 +72,7 @@
 | que_id  | int            | FOREIGN KEY(SubQuestion(id)) | 题解对应小题的id |
 | content | text           | NOT NULL                     | 题解内容         |
 | likes   | int            | CHECK(>=0)                   | 该题解被点赞次数 |
-| report  | int            | CHECK(>=0)                   | 该题解被举报次数 |
+| reports | int            | CHECK(>=0)                   | 该题解被举报次数 |
 
 
 

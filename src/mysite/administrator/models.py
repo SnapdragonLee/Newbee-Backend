@@ -81,3 +81,17 @@ class SubQuestion(models.Model):
             super().save(*args, **kwargs)
         except ValidationError as e:
             raise e
+
+
+class Solution(models.Model):
+    id = models.AutoField(verbose_name='题解id', primary_key=True)
+    subQuestion = models.ForeignKey(SubQuestion, on_delete=models.CASCADE, verbose_name="题解对应子题目的id")
+    content = models.TextField(verbose_name='题解内容')
+    likes = models.IntegerField(verbose_name='点赞数')
+    reports = models.IntegerField(verbose_name='举报数')
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(check=Q(likes__gte=0), name='check_likes'),
+            models.CheckConstraint(check=Q(reports__gte=0), name='check_reports')
+        ]

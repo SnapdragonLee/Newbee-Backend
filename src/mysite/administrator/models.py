@@ -24,7 +24,7 @@ class Question(models.Model):
         return self.title
 
     def clean(self):
-        if not ((self.type == CHOICE_QUE_NAME and self.text is None) or
+        if not ((self.type == CHOICE_QUE_NAME and (self.text is None or self.text.strip().__len__() == 0)) or
                 (self.type != CHOICE_QUE_NAME and self.text is not None)):
             raise ValidationError
 
@@ -65,7 +65,7 @@ class SubQuestion(models.Model):
 
     def clean(self):
         # 判断，完形题的小题题干为空，非完形题的小题题干不为空
-        if not ((self.question.type == CLOZE_QUE_NAME and self.stem is None) or
+        if not ((self.question.type == CLOZE_QUE_NAME and (self.stem is None or self.stem.strip().__len__() == 0)) or
                 (self.question.type != CLOZE_QUE_NAME and self.stem is not None)):
             raise ValidationError
 

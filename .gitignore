@@ -3,4 +3,4 @@ venv/
 *__pycache__/
 *dist/
 db.sqlite3
-migrations/
+*_initial.py

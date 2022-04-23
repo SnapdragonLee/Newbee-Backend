@@ -275,3 +275,19 @@ class ListSolution(View):
                 'total': total}
 
         return JsonResponse(data=wrap_response_data(0, **data))
+
+    @method_decorator(admin_logged)
+    def delete(self, request):
+
+        solution_id_list = request.GET.getlist('id')
+
+        try:
+            with transaction.atomic():
+                for solution_id in solution_id_list:
+                    admin_models.Solution.objects.get(id=solution_id).delete()
+
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, "有部分或全部题解id不合法，未执行任何删除操作"))
+
+        return JsonResponse(data=wrap_response_data(0))

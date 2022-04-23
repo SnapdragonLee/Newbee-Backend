@@ -5,7 +5,7 @@ import time
 from urllib import parse
 
 test_actor = "admin"  # something like "admin" \ "client"
-test_profile = "admin_logout"  # you need to create json file in profile documents
+test_profile = "admin_getname"  # you need to create json file in profile documents
 
 ##################################################################################################
 
@@ -27,7 +27,10 @@ session = requests.session()
 ##################################################################################################
 
 
-print("\nNewbee-English Script Test (Dev v0.12)\n")
+print("\n"
+      "**************************************************\n"
+      "*     Newbee-English Script Test (Dev v0.12)     *\n"
+      "**************************************************\n")
 
 
 def out(str):
@@ -73,7 +76,7 @@ def login():
         out("return message(msg)：%s" % verify["msg"])
 
     else:
-        out("page response：%d," % resp.status_code)
+        out("page response：%d, login failed!" % resp.status_code)
 
 
 def test():
@@ -93,7 +96,7 @@ def test():
         out("return message(msg)：%s" % verify["msg"])
 
     else:
-        out("page response: %d" % resp.status_code)
+        out("page response: %d, operation failed" % resp.status_code)
 
     # out("Login Success!")
     # out("请求上传成功！ 填报人：%s\n\n提示：%s" % ("000", "12345678"))

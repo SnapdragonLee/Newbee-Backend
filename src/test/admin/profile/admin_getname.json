@@ -1,3 +1,11 @@
 {
-    "test_api": "/api/admin/getname"
+  "test_actor": "admin",
+  "type": "get",
+  "login_data": {
+    "name": "000",
+    "pwd": "12345678"
+  },
+
+  "test_api": "/api/admin/getname",
+  "data": ""
 }

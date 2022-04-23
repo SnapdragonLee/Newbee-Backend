@@ -7,9 +7,11 @@ from urllib import parse
 test_actor = "admin"  # something like "admin" \ "client"
 test_profile = "admin_getname"  # you need to create json file in profile documents
 
-##################################################################################################
 
 main_addr = "http://127.0.0.1:8000"  # local server location
+# main_addr = "http://122.9.32.180"  # remote server location
+
+##################################################################################################
 
 test_profile_path = os.path.abspath(r"./" + test_actor + "/profile/" + test_profile + ".json")
 profile = json.load(open(test_profile_path, "rb"), parse_int=str)

@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 
 
-def wrap_response_data(ret, **data):
+def wrap_response_data(ret, msg='', **data):
     if ret == 0:
         data["ret"] = 0
         data["msg"] = "Normal operation."
@@ -16,6 +16,9 @@ def wrap_response_data(ret, **data):
 
     elif ret == 3:
         data["ret"] = 3
-        data["msg"] = "OE, you need to contact with backend group."
+        if msg.__len__() == 0:
+            data["msg"] = "OE, you need to contact with backend group."
+        else:
+            data["msg"] = msg
 
     return data

@@ -61,7 +61,7 @@ class SubQuestion(models.Model):
                                        ('D', 'D')), default='A')
 
     def __str__(self):
-        return 'id:' + str(self.id) + '   题干:' + self.stem
+        return 'id:' + str(self.id) + '   题干:' + str(self.stem)
 
     def clean(self):
         # 判断，完形题的小题题干为空，非完形题的小题题干不为空

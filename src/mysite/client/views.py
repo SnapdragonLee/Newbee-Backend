@@ -12,7 +12,8 @@ from django.http import JsonResponse
 def user_login(request):
     appid = 'wx88389d0a4b41284e'
     secret = '9d6c00e3835e1af3dae970780f5429fd'
-    code = request.POST['code']
+    post_data = json.loads(request.body)
+    code = post_data['code']
     url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid \
           + '&secret=' + secret + '&js_code=' + code + '&grant_type=authorization_code'
     response = json.loads(requests.get(url).content)

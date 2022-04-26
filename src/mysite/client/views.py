@@ -10,13 +10,15 @@ from django.http import JsonResponse
 
 # Create your views here.
 def user_login(request):
-    appid = 'wx88389d0a4b41284e'
-    secret = '9d6c00e3835e1af3dae970780f5429fd'
+    appid = 'wx9cb76a70a7aba68a'
+    secret = 'a79c0044ff02e5368cf3bc96704f7d76'
     post_data = json.loads(request.body)
     code = post_data['code']
+
     url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid \
           + '&secret=' + secret + '&js_code=' + code + '&grant_type=authorization_code'
     response = json.loads(requests.get(url).content)
+
     if 'errcode' in response:
         return JsonResponse(data=wrap_response_data(3, "获取openid失败"))
 

@@ -9,7 +9,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from client import models as client_models
 from . import models as admin_models
 from client.serializers import ListUserSerializer
-from .serializers import ListQuestionSerializer, DesignatedQuestionSerializer, SubQuestionSerializer
+from .serializers import ListQuestionSerializer, DesignatedQuestionSerializer, SubQuestionSerializer, SolutionSerializer
 from django.core import serializers
 from django.utils.decorators import method_decorator
 import json
@@ -269,7 +269,7 @@ class ListSolution(View):
         query_set = admin_models.Solution.objects.filter(subQuestion__id=sub_que_id).order_by('-reports')
 
         total = query_set.count()
-        serializer = SubQuestionSerializer(query_set, many=True)
+        serializer = SolutionSerializer(query_set, many=True)
 
         data = {'solutions': json.loads(json.dumps(serializer.data)),
                 'total': total}

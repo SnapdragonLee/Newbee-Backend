@@ -100,9 +100,6 @@ def test():
     else:
         out("page response: %d, operation failed" % resp.status_code)
 
-    # out("Login Success!")
-    # out("请求上传成功！ 填报人：%s\n\n提示：%s" % ("000", "12345678"))
-
 
 if __name__ == "__main__":
     login()

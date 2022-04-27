@@ -1,5 +1,3 @@
-from rest_framework.response import Response
-
 
 def wrap_response_data(ret, msg='', **data):
     if ret == 0:

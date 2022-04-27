@@ -10,12 +10,10 @@ from client import models as client_models
 from . import models as admin_models
 from client.serializers import ListUserSerializer
 from .serializers import ListQuestionSerializer, DesignatedQuestionSerializer, SubQuestionSerializer, SolutionSerializer
-from django.core import serializers
 from django.utils.decorators import method_decorator
 import json
 from utils.defines import *
 from django.db import transaction
-from django.core.exceptions import ValidationError
 
 
 # Create your views here.

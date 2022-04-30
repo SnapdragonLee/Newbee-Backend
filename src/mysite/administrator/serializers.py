@@ -30,6 +30,14 @@ class DesignatedQuestionSerializer(serializers.ModelSerializer):
 
 
 class SolutionSerializer(serializers.ModelSerializer):
+    bad_solution = SerializerMethodField()
+
     class Meta:
         model = Solution
-        fields = ['id', 'content', 'likes', 'reports']
+        fields = ['id', 'content', 'likes', 'reports', 'bad_solution']
+
+    def get_bad_solution(self, solution_obj: Solution):
+        if solution_obj.bad_solution:
+            return 1
+        else:
+            return 0

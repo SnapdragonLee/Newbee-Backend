@@ -6,6 +6,9 @@ import requests
 from .models import WXUser
 from utils.response import wrap_response_data
 from django.http import JsonResponse
+from django.views.generic.base import View
+from django.utils.decorators import method_decorator
+from utils.auth_decorators import user_logged
 
 
 # Create your views here.
@@ -38,4 +41,33 @@ def user_login(request):
     # key = sha.hexdigest()
     #
     # return Response(data={'ret': 0, 'key': key})
+    pass
+
+
+class SolutionViewClass(View):
+    @method_decorator(user_logged)
+    def get(self, request):
+        pass
+
+    @method_decorator(user_logged)
+    def post(self, request):
+        pass
+
+
+@user_logged
+def solution_like(request):
+    try:
+        post_data = json.loads(request.body)
+        solution_id = post_data['solution_id']
+    except Exception as e:
+        print(e.args)
+        return JsonResponse(data=wrap_response_data(3, '参数格式不符'))
+
+    # todo 同一个用户对同一个题解只能点赞或举报一次
+
+
+@user_logged
+def solution_report(request):
+    # todo 同一个用户对同一个题解只能点赞或举报一次
+
     pass

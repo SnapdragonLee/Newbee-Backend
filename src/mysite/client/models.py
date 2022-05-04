@@ -2,7 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User, UserManager
 from django.db.models import Q
-
+from utils.defines import *
 
 # Create your models here.
 
@@ -41,5 +41,32 @@ class WXUser(models.Model):
             models.CheckConstraint(check=Q(right_cloze__gte=0), name='right_cloze__gte_0'),
             models.CheckConstraint(check=Q(total_reading__gte=0), name='total_reading__gte_0'),
             models.CheckConstraint(check=Q(right_reading__gte=0), name='right_reading__gte_0'),
-            models.CheckConstraint(check=Q(status=0) | Q(status=1), name='check_status')
+            models.CheckConstraint(check=Q(status__gte=0) & Q(status__lte=7), name='check_status')
         ]
+
+class ListOfQuestion(models.Model):
+    openid = models.CharField(verbose_name='用户的openid', max_length=50)
+    question_id = models.IntegerField(verbose_name='所做的题目id', default=0, null=False)
+    def __str__(self):
+        return self.openid
+
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+            super().save(*args, **kwargs)
+        except ValidationError as e:
+            raise e
+
+class WrongQuestions(models.Model):
+    openid = models.CharField(verbose_name='用户的openid',max_length=50)
+    question_id = models.IntegerField(verbose_name='做错的题目id', default=0, null=False)
+    havedone = models.BooleanField(verbose_name='是否已经做过', default=False, null=False)
+    def __str__(self):
+        return self.openid
+
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+            super().save(*args, **kwargs)
+        except ValidationError as e:
+            raise e

@@ -106,3 +106,6 @@ class Solution(models.Model):
         except ValidationError as e:
             raise e
 
+class Notice(models.Model):
+    data = models.DateTimeField(verbose_name='创建日期', auto_now=True)
+    content = models.TextField(verbose_name='公告内容')

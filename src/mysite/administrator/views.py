@@ -289,3 +289,7 @@ class ListSolution(View):
             return JsonResponse(data=wrap_response_data(3, "有部分或全部题解id不合法，未执行任何删除操作"))
 
         return JsonResponse(data=wrap_response_data(0))
+
+def get_notice(request):
+
+    return JsonResponse(data=wrap_response_data(0))

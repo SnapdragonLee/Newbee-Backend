@@ -89,6 +89,7 @@ class Solution(models.Model):
     content = models.TextField(verbose_name='题解内容')
     likes = models.IntegerField(verbose_name='点赞数')
     reports = models.IntegerField(verbose_name='举报数')
+    bad_solution = models.BooleanField(verbose_name='是否被举报过多', default=False)
 
     def __str__(self):
         return str(self.content)[0:20]
@@ -99,6 +100,15 @@ class Solution(models.Model):
             models.CheckConstraint(check=Q(reports__gte=0), name='check_reports')
         ]
 
+    def is_bad_solution(self):
+        # self.refresh_from_db()
+        if (self.reports + 1) > 10 and (self.reports + 1) > (self.likes * 3):
+            self.bad_solution = True
+            return True
+        else:
+            self.bad_solution = False
+            return False
+
     def save(self, *args, **kwargs):
         try:
             self.full_clean()
@@ -106,6 +116,8 @@ class Solution(models.Model):
         except ValidationError as e:
             raise e
 
+
 class Notice(models.Model):
     data = models.DateTimeField(verbose_name='创建日期', auto_now=True)
     content = models.TextField(verbose_name='公告内容')
+

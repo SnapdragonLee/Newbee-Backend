@@ -66,13 +66,14 @@
 
 ### Solution
 
-| 列名    | 数据类型及精度 | 约束条件                     | 说明             |
-| ------- | -------------- | ---------------------------- | ---------------- |
-| id      | int            | PRIMARY KEY, AUTO_INCREMENT  | 题解id           |
-| que_id  | int            | FOREIGN KEY(SubQuestion(id)) | 题解对应小题的id |
-| content | text           | NOT NULL                     | 题解内容         |
-| likes   | int            | CHECK(>=0)                   | 该题解被点赞次数 |
-| reports | int            | CHECK(>=0)                   | 该题解被举报次数 |
+| 列名         | 数据类型及精度 | 约束条件                     | 说明                                         |
+| ------------ | -------------- | ---------------------------- | -------------------------------------------- |
+| id           | int            | PRIMARY KEY, AUTO_INCREMENT  | 题解id                                       |
+| que_id       | int            | FOREIGN KEY(SubQuestion(id)) | 题解对应小题的id                             |
+| content      | text           | NOT NULL                     | 题解内容                                     |
+| likes        | int            | CHECK(>=0)                   | 该题解被点赞次数                             |
+| reports      | int            | CHECK(>=0)                   | 该题解被举报次数                             |
+| bad_solution | bool           |                              | 该题解是否因被举报比例过大，而需被管理员检查 |
 
 
 

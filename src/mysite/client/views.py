@@ -136,7 +136,7 @@ def return_info(this_question, question_id):
     return JsonResponse(data=wrap_response_data(0, **data))
 
 def return_wrongquestion(user_id, question_type, user, status, status_value):
-    wrong_question = WrongQuestions.objects.filter(openid=user_id, question_id__type=question_type, havedone=False).order_by('?').first()
+    wrong_question = WrongQuestions.objects.filter(openid=user_id, question__type=question_type, havedone=False).order_by('?').first()
     if not wrong_question:
         # 更新用户刷题阶段
         user.status = status - status_value
@@ -145,7 +145,7 @@ def return_wrongquestion(user_id, question_type, user, status, status_value):
         wrong_questions = WrongQuestions.objects.filter(openid=user_id)
         wrong_questions.update(havedone=False)
         # 删除该用户刷题表
-        questions = ListOfQuestion.objects.filter(openid=user_id, question_id__type=question_type)
+        questions = ListOfQuestion.objects.filter(openid=user_id, question__type=question_type)
         questions.delete()
         # 从题库中随机取一个该类型题目，由于刚清空记录表，省略了一些判断
         this_question = Question.objects.filter(type=question_type).order_by('?').first()
@@ -170,7 +170,6 @@ def return_question(type, id, user_id, user, status):
         status_value = 3
     if id:#传id指定查询
         try:
-            print(type)
             topic = Question.objects.get(id=id, type=question_type)
         except:
             return JsonResponse(data=wrap_response_data(3, '哦吼，本题可能已经被管理员删除啦', **data))
@@ -180,7 +179,7 @@ def return_question(type, id, user_id, user, status):
             return return_wrongquestion(user_id, question_type, user, status, status_value)
         else:
             #获取用户已经做过的所有题目的id
-            haven_do = ListOfQuestion.objects.filter(openid=user_id).values('question_id')
+            haven_do = ListOfQuestion.objects.filter(openid=user_id).values('question__id')
             #随机获取此类题型还没做过的题目
             this_question = Question.objects.filter(type=question_type).exclude(id__in=haven_do).order_by('?').first()
             if not this_question:
@@ -188,7 +187,6 @@ def return_question(type, id, user_id, user, status):
                 user.save()
                 return return_wrongquestion(user_id, question_type, user, status, status_value)
             return return_info(this_question, this_question.id)
-
 
 #@user_logged
 def get_question(request):
@@ -199,3 +197,11 @@ def get_question(request):
     user = WXUser.objects.get(id=user_id)
     status = user.status
     return return_question(question_type, id, user_id, user, status)
+
+
+"""class wrong_que_bookClass(View):
+    def get(self, request):
+        return
+    def post(self, request):
+        return
+    def delete(self, request):"""

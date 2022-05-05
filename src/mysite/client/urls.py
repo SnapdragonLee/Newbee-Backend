@@ -8,4 +8,5 @@ urlpatterns = [
     path('solution_like', views.solution_like),
     path('solution_report', views.solution_report),
     path('get_question', views.get_question, name='get_question'),
+    #path('wrong_que_book', views.wrong_que_bookClass.as_views()),
 ]

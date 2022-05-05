@@ -45,7 +45,9 @@ def get_name(request):
 def get_user_list(page_num, page_size, query_set):
     paginator = Paginator(query_set, page_size)
     user_list = paginator.get_page(page_num).object_list
-    total = query_set.count()
+
+    # total = query_set.count()
+    total = len(query_set)
     serializer = ListUserSerializer(user_list, many=True)
     return {'list': json.loads(json.dumps(serializer.data)),
             'total': total}
@@ -101,7 +103,8 @@ class ListQuestion(View):
 
         paginator = Paginator(query_set, page_size)
         que_list = paginator.get_page(page_number).object_list
-        total = query_set.count()
+        # total = query_set.count()
+        total = len(query_set)
         serializer = ListQuestionSerializer(que_list, many=True)
         data = {'list': json.loads(json.dumps(serializer.data)),
                 'total': total}
@@ -266,7 +269,8 @@ class ListSolution(View):
 
         query_set = admin_models.Solution.objects.filter(subQuestion__id=sub_que_id).order_by('-reports')
 
-        total = query_set.count()
+        # total = query_set.count()
+        total = len(query_set)
         serializer = SolutionSerializer(query_set, many=True)
 
         data = {'solutions': json.loads(json.dumps(serializer.data)),
@@ -289,3 +293,20 @@ class ListSolution(View):
             return JsonResponse(data=wrap_response_data(3, "有部分或全部题解id不合法，未执行任何删除操作"))
 
         return JsonResponse(data=wrap_response_data(0))
+
+
+@admin_logged
+def has_bad_solution(request):
+    query_set = admin_models.Solution.objects.all()
+    has = False
+    for solution in query_set:
+        if solution.is_bad_solution():
+            has = True
+            break
+
+    if has:
+        data = {'has_bad_solution': 1}
+    else:
+        data = {'has_bad_solution': 0}
+
+    return JsonResponse(data=wrap_response_data(0, **data))

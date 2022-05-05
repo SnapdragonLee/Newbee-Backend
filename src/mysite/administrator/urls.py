@@ -9,5 +9,7 @@ urlpatterns = [
     path('designated_user', views.DesignatedUser.as_view(), name='admin_designated_user'),
     path('list_question', views.ListQuestion.as_view(), name='admin_list_question'),
     path('designated_question', views.DesignatedQuestion.as_view(), name='admin_designated_question'),
-    path('solution', views.ListSolution.as_view(), name='admin_solution')
+    path('solution', views.ListSolution.as_view(), name='admin_solution'),
+    path('has_bad_solution', views.has_bad_solution, name='admin_has_bad_solution')
+
 ]

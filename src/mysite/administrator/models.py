@@ -42,6 +42,16 @@ class Question(models.Model):
         except ValidationError as e:
             raise e
 
+    def has_bad_solution(self):
+        sub_que_set = SubQuestion.objects.filter(question=self)
+        ret = False
+        for sub_que in sub_que_set:
+            if sub_que.has_bad_solution():
+                ret = True
+                break
+
+        return ret
+
 
 # django默认字段参数中的null和blank都是false，所以以下写法很冗余
 class SubQuestion(models.Model):
@@ -82,6 +92,15 @@ class SubQuestion(models.Model):
         except ValidationError as e:
             raise e
 
+    def has_bad_solution(self):
+        solution_set = Solution.objects.filter(subQuestion=self)
+        ret = False
+        for solution in solution_set:
+            if solution.is_bad_solution():
+                ret = True
+                break
+        return ret
+
 
 class Solution(models.Model):
     id = models.AutoField(verbose_name='题解id', primary_key=True)
@@ -89,7 +108,7 @@ class Solution(models.Model):
     content = models.TextField(verbose_name='题解内容')
     likes = models.IntegerField(verbose_name='点赞数')
     reports = models.IntegerField(verbose_name='举报数')
-    bad_solution = models.BooleanField(verbose_name='是否被举报过多', default=False)
+    # bad_solution = models.BooleanField(verbose_name='是否被举报过多', default=False)
 
     def __str__(self):
         return str(self.content)[0:20]
@@ -102,11 +121,9 @@ class Solution(models.Model):
 
     def is_bad_solution(self):
         # self.refresh_from_db()
-        if (self.reports + 1) > 10 and (self.reports + 1) > (self.likes * 3):
-            self.bad_solution = True
+        if self.reports > 10 and (self.reports > self.likes * 3):
             return True
         else:
-            self.bad_solution = False
             return False
 
     def save(self, *args, **kwargs):

@@ -310,3 +310,7 @@ def has_bad_solution(request):
         data = {'has_bad_solution': 0}
 
     return JsonResponse(data=wrap_response_data(0, **data))
+
+
+def get_notice(request):
+    return JsonResponse(data=wrap_response_data(0))

@@ -132,3 +132,9 @@ class Solution(models.Model):
             super().save(*args, **kwargs)
         except ValidationError as e:
             raise e
+
+
+class Notice(models.Model):
+    data = models.DateTimeField(verbose_name='创建日期', auto_now=True)
+    content = models.TextField(verbose_name='公告内容')
+

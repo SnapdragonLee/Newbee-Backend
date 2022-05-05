@@ -1,5 +1,7 @@
-from rest_framework import serializers
 from .models import WXUser
+from rest_framework import serializers
+from administrator.models import Question, SubQuestion, Solution
+from rest_framework.serializers import SerializerMethodField
 
 
 class ListUserSerializer(serializers.ModelSerializer):
@@ -24,4 +26,21 @@ class ListUserSerializer(serializers.ModelSerializer):
             #这个fields列表中的字符串就是字段名
             #这样序列化器生成的字典中的key值与字段名相同
     '''
+
+class client_SubQuestionSerializer(serializers.ModelSerializer):
+    options = SerializerMethodField()
+
+    class Meta:
+        model = SubQuestion
+        fields = ['id', 'number', 'stem', 'options']
+
+    def get_options(self, sub_question):
+        data = [sub_question.A, sub_question.B, sub_question.C, sub_question.D]
+        return data
+
+
+class client_DesignatedQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ['id', 'title', 'text', 'sub_que_num']
 

@@ -4,4 +4,4 @@ venv/
 *dist/
 db.sqlite3
 *_initial.py
-*migrations/0002_auto_20220506_1657.py
+*migrations/00*.py

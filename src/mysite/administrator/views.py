@@ -290,6 +290,4 @@ class ListSolution(View):
 
         return JsonResponse(data=wrap_response_data(0))
 
-def get_notice(request):
-
-    return JsonResponse(data=wrap_response_data(0))
+#def get_notice(request):

@@ -5,7 +5,7 @@ import json
 import requests
 from .models import WXUser, WrongQuestions, ListOfQuestion
 from administrator.models import Question, SubQuestion
-from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer
+from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, client_ListQuestionSerializer
 from utils.response import wrap_response_data
 from django.http import JsonResponse
 from django.views.generic.base import View
@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from utils.auth_decorators import user_logged
 from django.db import transaction
 from utils.defines import *
-
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 # Create your views here.
 def user_login(request):
@@ -136,7 +136,7 @@ def return_info(this_question, question_id):
     return JsonResponse(data=wrap_response_data(0, **data))
 
 def return_wrongquestion(user_id, question_type, user, status, status_value):
-    wrong_question = WrongQuestions.objects.filter(openid=user_id, question__type=question_type, havedone=False).order_by('?').first()
+    wrong_question = WrongQuestions.objects.filter(openid=user_id,question__type=question_type, havedone=False).order_by('?').first()
     if not wrong_question:
         # 更新用户刷题阶段
         user.status = status - status_value
@@ -191,17 +191,41 @@ def return_question(type, id, user_id, user, status):
 #@user_logged
 def get_question(request):
     # 获取传递的参数和需要使用的数据
-    question_type = request.GET.get('type')
+    question_type = request.GET['type']
     id = request.GET.get('id')
-    user_id = 123  # request.session['openid']
+    user_id = request.session['openid']
     user = WXUser.objects.get(id=user_id)
     status = user.status
     return return_question(question_type, id, user_id, user, status)
 
 
-"""class wrong_que_bookClass(View):
+class wrong_que_bookClass(View):
+    #@method_decorator(user_logged)
     def get(self, request):
-        return
+        page_number = request.GET['pagenumber']
+        page_size = request.GET['pagesize']
+        user_id = 123  # request.session['openid']
+        wrong_question_list = WrongQuestions.objects.filter(openid=user_id).order_by('-date')
+        if not wrong_question_list:
+            return JsonResponse(data=wrap_response_data(3, '目前还没有错题加入哦'))
+        paginator = Paginator(wrong_question_list, page_size)
+        que_list = paginator.get_page(page_number).object_list
+        serializer = client_ListQuestionSerializer(que_list, many=True)
+        data = {'list': json.loads(json.dumps(serializer.data))}
+        return JsonResponse(data=wrap_response_data(0, **data))
+
+    #@method_decorator(user_logged)
     def post(self, request):
-        return
-    def delete(self, request):"""
+        user_id = 123  # request.session['openid']
+        id = request.GET['id']
+        WrongQuestions.objects.create(openid=user_id, question_id=id)
+        return JsonResponse(data=wrap_response_data(0))
+
+    #@method_decorator(user_logged)
+    def delete(self, request):
+        user_id = 123  # request.session['openid']
+        id = request.GET['id']
+        wrong_question=WrongQuestions.objects.get(openid=user_id, question_id=id)
+        wrong_question.delete()
+        return JsonResponse(data=wrap_response_data(0))
+

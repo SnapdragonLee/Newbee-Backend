@@ -10,5 +10,5 @@ urlpatterns = [
     path('list_question', views.ListQuestion.as_view(), name='admin_list_question'),
     path('designated_question', views.DesignatedQuestion.as_view(), name='admin_designated_question'),
     path('solution', views.ListSolution.as_view(), name='admin_solution'),
-    path('notice', views.get_notice, name='get_notice')
+    #path('notice', views.get_notice, name='get_notice')
 ]

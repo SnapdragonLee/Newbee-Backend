@@ -32,6 +32,16 @@
 
 
 
+### OperationRecord
+
+| 列名         | 数据类型及精度 | 约束条件                                     | 说明                               |
+| ------------ | -------------- | -------------------------------------------- | ---------------------------------- |
+| 管理员用户名 | int            | PRIMARY KEY                                  |                                    |
+| 操作类型     | varchar(20)    | NOT NULL, CHECK(in {"增加", "修改", "删除"}) |                                    |
+| 操作描述     | text           | NOT NULL                                     | 有关操作的描述，比如描述操作的对象 |
+
+
+
 ## 二、题库管理
 
 ### Question
@@ -66,14 +76,13 @@
 
 ### Solution
 
-| 列名         | 数据类型及精度 | 约束条件                     | 说明                                         |
-| ------------ | -------------- | ---------------------------- | -------------------------------------------- |
-| id           | int            | PRIMARY KEY, AUTO_INCREMENT  | 题解id                                       |
-| que_id       | int            | FOREIGN KEY(SubQuestion(id)) | 题解对应小题的id                             |
-| content      | text           | NOT NULL                     | 题解内容                                     |
-| likes        | int            | CHECK(>=0)                   | 该题解被点赞次数                             |
-| reports      | int            | CHECK(>=0)                   | 该题解被举报次数                             |
-| bad_solution | bool           |                              | 该题解是否因被举报比例过大，而需被管理员检查 |
+| 列名    | 数据类型及精度 | 约束条件                     | 说明             |
+| ------- | -------------- | ---------------------------- | ---------------- |
+| id      | int            | PRIMARY KEY, AUTO_INCREMENT  | 题解id           |
+| que_id  | int            | FOREIGN KEY(SubQuestion(id)) | 题解对应小题的id |
+| content | text           | NOT NULL                     | 题解内容         |
+| likes   | int            | CHECK(>=0)                   | 该题解被点赞次数 |
+| reports | int            | CHECK(>=0)                   | 该题解被举报次数 |
 
 
 
@@ -121,9 +130,8 @@
 
 ### Notice
 
-| 列名    | 数据类型及精度 | 约束条件                    | 说明         |
-| ------- | -------------- | --------------------------- | ------------ |
-| id      | int            | PRIMARY KEY, AUTO_INCREMENT | 此条公告的id |
-| contant | text           | NOT NULL                    | 公告内容     |
-| date    | datetime       | NOT NULL                    | 公告创建时间 |
+| 列名    | 数据类型及精度 | 约束条件 | 说明         |
+| ------- | -------------- | -------- | ------------ |
+| content | text           | NOT NULL | 公告内容     |
+| time    | datetime       | NOT NULL | 公告创建时间 |
 

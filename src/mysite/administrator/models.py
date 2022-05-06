@@ -1,7 +1,10 @@
+import django.utils.timezone
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.db.models import Q, F
 from utils.defines import *
+from django.contrib.auth.models import User
+import datetime
 
 
 # Create your models here.
@@ -135,6 +138,34 @@ class Solution(models.Model):
 
 
 class Notice(models.Model):
-    data = models.DateTimeField(verbose_name='创建日期', auto_now=True)
-    content = models.TextField(verbose_name='公告内容')
+    time = models.DateTimeField(verbose_name='公告更新的时间', auto_now=True)
+    content = models.TextField(verbose_name='公告内容', default='welcome to NewBee English')
 
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+            super().save(*args, **kwargs)
+        except ValidationError as e:
+            raise e
+
+
+class OperationRecord(models.Model):
+    OP_ADD = 'add'
+    OP_MOD = 'modify'
+    OP_DEL = 'delete'
+
+    admin = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='进行此操作的管理员')
+    operation = models.CharField(verbose_name='操作类型', max_length=20,
+                                 choices=((OP_ADD, '添加'),
+                                          (OP_MOD, '修改'),
+                                          (OP_DEL, '删除')),
+                                 default=OP_ADD)
+
+    description = models.TextField(verbose_name='操作描述')
+
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+            super().save(*args, **kwargs)
+        except ValidationError as e:
+            raise e

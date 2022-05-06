@@ -24,7 +24,7 @@ class SubQuestionSerializer(serializers.ModelSerializer):
         model = SubQuestion
         fields = ['id', 'number', 'stem', 'answer', 'options', 'has_bad_solution']
 
-    def get_options(self, sub_question):
+    def get_options(self, sub_question: SubQuestion):
         data = [sub_question.A, sub_question.B, sub_question.C, sub_question.D]
         return data
 

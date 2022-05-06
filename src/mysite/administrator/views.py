@@ -312,5 +312,40 @@ def has_bad_solution(request):
     return JsonResponse(data=wrap_response_data(0, **data))
 
 
-def get_notice(request):
-    return JsonResponse(data=wrap_response_data(0))
+def check_has_notice():
+    return True if admin_models.Notice.objects.count() >= 1 else False
+
+
+class NoticeViewClass(View):
+    @method_decorator(admin_logged)
+    def get(self, request):
+
+        if not check_has_notice():
+            notice_obj = admin_models.Notice()
+            notice_obj.save()
+        else:
+            notice_obj = admin_models.Notice.objects.all()[0]
+
+        data = {'content': notice_obj.content,
+                'time': str(notice_obj.time).split('.')[0]}
+
+        return JsonResponse(data=wrap_response_data(0, **data))
+
+    @method_decorator(admin_logged)
+    def post(self, request):
+        try:
+            post_data = json.loads(request.body)
+            content = post_data['content']
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, 'json格式错误'))
+
+        if not check_has_notice():
+            notice_obj = admin_models.Notice()
+        else:
+            notice_obj = admin_models.Notice.objects.all()[0]
+
+        notice_obj.content = content
+        notice_obj.save()
+        return JsonResponse(data=wrap_response_data(0))
+        pass

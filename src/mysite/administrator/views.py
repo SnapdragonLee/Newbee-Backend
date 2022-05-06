@@ -14,6 +14,7 @@ from django.utils.decorators import method_decorator
 import json
 from utils.defines import *
 from django.db import transaction
+import datetime
 
 
 # Create your views here.
@@ -327,7 +328,7 @@ class NoticeViewClass(View):
             notice_obj = admin_models.Notice.objects.all()[0]
 
         data = {'content': notice_obj.content,
-                'time': str(notice_obj.time).split('.')[0]}
+                'time': str(notice_obj.time + datetime.timedelta(hours=8)).split('.')[0]}
 
         return JsonResponse(data=wrap_response_data(0, **data))
 

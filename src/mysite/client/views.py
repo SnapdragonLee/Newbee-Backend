@@ -32,7 +32,7 @@ def user_login(request):
 
     url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid \
           + '&secret=' + secret + '&js_code=' + code + '&grant_type=authorization_code'
-    print('code=%s' % code)
+    print(code)
     response = json.loads(requests.get(url).content)
 
     if 'errcode' in response:

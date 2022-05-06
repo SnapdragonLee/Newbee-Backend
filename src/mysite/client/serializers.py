@@ -44,3 +44,9 @@ class client_DesignatedQuestionSerializer(serializers.ModelSerializer):
         model = Question
         fields = ['id', 'title', 'text', 'sub_que_num']
 
+class client_ListQuestionSerializer(serializers.ModelSerializer):
+    # title = serializers.CharField(source='title')
+
+    class Meta:
+        model = Question
+        fields = ['id','title', 'date']

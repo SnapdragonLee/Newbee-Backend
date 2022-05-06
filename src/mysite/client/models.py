@@ -47,7 +47,6 @@ class WXUser(models.Model):
 
 class ListOfQuestion(models.Model):
     openid = models.CharField(verbose_name='用户的openid', max_length=50)
-    #question_id = models.IntegerField(verbose_name='所做的题目id', default=0, null=False)
     question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="对应的问题")
     def __str__(self):
         return self.openid
@@ -61,8 +60,8 @@ class ListOfQuestion(models.Model):
 
 class WrongQuestions(models.Model):
     openid = models.CharField(verbose_name='用户的openid',max_length=50)
-    #question_id = models.IntegerField(verbose_name='做错的题目id', default=0, null=False)
     question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="对应的问题")
+    date = models.DateTimeField(verbose_name='时间', auto_now_add=True)
     havedone = models.BooleanField(verbose_name='是否已经做过', default=False, null=False)
     def __str__(self):
         return self.openid

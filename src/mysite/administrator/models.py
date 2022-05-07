@@ -1,3 +1,5 @@
+from enum import Enum
+
 import django.utils.timezone
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -111,6 +113,7 @@ class Solution(models.Model):
     content = models.TextField(verbose_name='题解内容')
     likes = models.IntegerField(verbose_name='点赞数')
     reports = models.IntegerField(verbose_name='举报数')
+
     # bad_solution = models.BooleanField(verbose_name='是否被举报过多', default=False)
 
     def __str__(self):
@@ -150,18 +153,19 @@ class Notice(models.Model):
 
 
 class OperationRecord(models.Model):
-    OP_ADD = 'add'
-    OP_MOD = 'modify'
-    OP_DEL = 'delete'
+    class OP_TYPE(models.TextChoices):
+        ADD = '添加', '添加'
+        MOD = '修改', '修改'
+        DEL = '删除', '删除'
+        OTHER = '其他', '其他'
 
     admin = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='进行此操作的管理员')
     operation = models.CharField(verbose_name='操作类型', max_length=20,
-                                 choices=((OP_ADD, '添加'),
-                                          (OP_MOD, '修改'),
-                                          (OP_DEL, '删除')),
-                                 default=OP_ADD)
+                                 choices=OP_TYPE.choices,
+                                 default=OP_TYPE.ADD)
 
     description = models.TextField(verbose_name='操作描述')
+    time = models.DateTimeField(verbose_name='操作时间', auto_now=True)
 
     def save(self, *args, **kwargs):
         try:
@@ -169,3 +173,6 @@ class OperationRecord(models.Model):
             super().save(*args, **kwargs)
         except ValidationError as e:
             raise e
+
+    class Meta:
+        ordering = ['-time']

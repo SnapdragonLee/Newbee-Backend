@@ -130,13 +130,14 @@ def solution_report(request):
     pass
 
 
-def return_info(this_question, question_id):
+def return_info(this_question, question_id, flag):
     serializer = client_DesignatedQuestionSerializer(this_question)
     data = json.loads(json.dumps(serializer.data))
     sub_question_query_set = SubQuestion.objects.filter(question__id=question_id).order_by('number')
     serializer = client_SubQuestionSerializer(sub_question_query_set, many=True)
     sub_question_json_list = json.loads(json.dumps(serializer.data))
     data['sub_que'] = sub_question_json_list
+    data['flag'] = flag
     return JsonResponse(data=wrap_response_data(0, **data))
 
 
@@ -154,10 +155,12 @@ def return_wrongquestion(user_id, question_type, user, status, status_value):
         questions.delete()
         # 从题库中随机取一个该类型题目，由于刚清空记录表，省略了一些判断
         this_question = Question.objects.filter(type=question_type).order_by('?').first()
-        return return_info(this_question, this_question.id)
+        flag=0
+        return return_info(this_question, this_question.id, flag)
     # 返回随机取到的没做过的错题
     this_question = Question.objects.get(id=wrong_question.question_id)
-    return return_info(this_question, wrong_question.question_id)
+    flag=1
+    return return_info(this_question, wrong_question.question_id, flag)
 
 
 def return_question(type, id, user_id, user, status):
@@ -181,7 +184,8 @@ def return_question(type, id, user_id, user, status):
             topic = Question.objects.get(id=id, type=question_type)
         except:
             return JsonResponse(data=wrap_response_data(3, '哦吼，本题可能已经被管理员删除啦', **data))
-        return return_info(topic, id)
+        flag=0
+        return return_info(topic, id, flag)
     else:  # 随机刷题
         if status in all_status:
             return return_wrongquestion(user_id, question_type, user, status, status_value)
@@ -192,9 +196,11 @@ def return_question(type, id, user_id, user, status):
             this_question = Question.objects.filter(type=question_type).exclude(id__in=haven_do).order_by('?').first()
             if not this_question:
                 user.status = status + status_value
+                status = user.status
                 user.save()
                 return return_wrongquestion(user_id, question_type, user, status, status_value)
-            return return_info(this_question, this_question.id)
+            flag=0
+            return return_info(this_question, this_question.id, flag)
 
 #@user_logged
 def get_question(request):
@@ -218,6 +224,8 @@ class wrong_que_bookClass(View):
             wrong_question_list = WrongQuestions.objects.filter(openid=user_id).order_by('-date')
         else:
             wrong_question_list = WrongQuestions.objects.filter(openid=user_id, question__type=type).order_by('-date')
+        #if not wrong_question_list:
+        #    return JsonResponse(data=wrap_response_data(3, '目前还没有错题加入哦'))
         paginator = Paginator(wrong_question_list, page_size)
         que_list = paginator.get_page(page_number).object_list
         serializer = client_ListQuestionSerializer(que_list, many=True)

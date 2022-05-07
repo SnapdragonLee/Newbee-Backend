@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 import json
 import requests
-from .models import WXUser, WrongQuestions, ListOfQuestion
+from .models import WXUser, WrongQuestions, ListOfQuestion, history
 from administrator.models import Question, SubQuestion
 from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, \
     client_ListQuestionSerializer
@@ -141,8 +141,7 @@ def return_info(this_question, question_id):
 
 
 def return_wrongquestion(user_id, question_type, user, status, status_value):
-    wrong_question = WrongQuestions.objects.filter(openid=user_id, question__type=question_type,
-                                                   havedone=False).order_by('?').first()
+    wrong_question = WrongQuestions.objects.filter(openid=user_id, question__type=question_type,havedone=False).order_by('?').first()
     if not wrong_question:
         # 更新用户刷题阶段
         user.status = status - status_value
@@ -175,6 +174,8 @@ def return_question(type, id, user_id, user, status):
         question_type = READING_QUE_NAME
         all_status = [4, 5, 6, 7]
         status_value = 3
+    else:
+        return JsonResponse(data=wrap_response_data(3, 'type error', **data))
     if id:  # 传id指定查询
         try:
             topic = Question.objects.get(id=id, type=question_type)
@@ -195,12 +196,12 @@ def return_question(type, id, user_id, user, status):
                 return return_wrongquestion(user_id, question_type, user, status, status_value)
             return return_info(this_question, this_question.id)
 
-@user_logged
+#@user_logged
 def get_question(request):
     # 获取传递的参数和需要使用的数据
     question_type = request.GET['type']
     id = request.GET.get('id')
-    user_id = request.session['openid']
+    user_id = 123#request.session['openid']
     user = WXUser.objects.get(id=user_id)
     status = user.status
     return return_question(question_type, id, user_id, user, status)
@@ -212,9 +213,11 @@ class wrong_que_bookClass(View):
         page_number = request.GET['pagenumber']
         page_size = 12
         user_id = request.session['openid']
-        wrong_question_list = WrongQuestions.objects.filter(openid=user_id).order_by('-date')
-        if not wrong_question_list:
-            return JsonResponse(data=wrap_response_data(3, '目前还没有错题加入哦'))
+        type = request.GET.get('type')
+        if not type:
+            wrong_question_list = WrongQuestions.objects.filter(openid=user_id).order_by('-date')
+        else:
+            wrong_question_list = WrongQuestions.objects.filter(openid=user_id, question__type=type).order_by('-date')
         paginator = Paginator(wrong_question_list, page_size)
         que_list = paginator.get_page(page_number).object_list
         serializer = client_ListQuestionSerializer(que_list, many=True)
@@ -235,3 +238,11 @@ class wrong_que_bookClass(View):
         wrong_question = WrongQuestions.objects.get(openid=user_id, question_id=id)
         wrong_question.delete()
         return JsonResponse(data=wrap_response_data(0))
+
+'''    def record(request):
+        user_id = 123  # request.session['openid']
+        type = request.GET.get('type')
+        if not type:
+            question = history.object.filter(openid = user_id)
+        else:
+            question = history.object.filter()'''

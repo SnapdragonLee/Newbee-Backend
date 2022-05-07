@@ -72,3 +72,17 @@ class WrongQuestions(models.Model):
             super().save(*args, **kwargs)
         except ValidationError as e:
             raise e
+
+class history(models.Model):
+    openid = models.CharField(verbose_name='用户的openid', max_length=50)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="对应的问题")
+    date = models.DateTimeField(verbose_name='时间', auto_now_add=True)
+    def __str__(self):
+        return self.openid
+
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+            super().save(*args, **kwargs)
+        except ValidationError as e:
+            raise e

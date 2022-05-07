@@ -5,7 +5,8 @@ import json
 import requests
 from .models import WXUser, WrongQuestions, ListOfQuestion
 from administrator.models import Question, SubQuestion
-from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, client_ListQuestionSerializer
+from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, \
+    client_ListQuestionSerializer
 from utils.response import wrap_response_data
 from django.http import JsonResponse
 from django.views.generic.base import View
@@ -14,6 +15,7 @@ from utils.auth_decorators import user_logged
 from django.db import transaction
 from utils.defines import *
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 # Create your views here.
 def user_login(request):
@@ -30,6 +32,7 @@ def user_login(request):
 
     url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid \
           + '&secret=' + secret + '&js_code=' + code + '&grant_type=authorization_code'
+    print(code)
     response = json.loads(requests.get(url).content)
 
     if 'errcode' in response:
@@ -57,6 +60,7 @@ def user_login(request):
     #
     # return Response(data={'ret': 0, 'key': key})
     pass
+
 
 class UserProfile(View):
     @method_decorator(user_logged)
@@ -135,8 +139,10 @@ def return_info(this_question, question_id):
     data['sub_que'] = sub_question_json_list
     return JsonResponse(data=wrap_response_data(0, **data))
 
+
 def return_wrongquestion(user_id, question_type, user, status, status_value):
-    wrong_question = WrongQuestions.objects.filter(openid=user_id,question__type=question_type, havedone=False).order_by('?').first()
+    wrong_question = WrongQuestions.objects.filter(openid=user_id, question__type=question_type,
+                                                   havedone=False).order_by('?').first()
     if not wrong_question:
         # 更新用户刷题阶段
         user.status = status - status_value
@@ -154,33 +160,34 @@ def return_wrongquestion(user_id, question_type, user, status, status_value):
     this_question = Question.objects.get(id=wrong_question.question_id)
     return return_info(this_question, wrong_question.question_id)
 
+
 def return_question(type, id, user_id, user, status):
     data = {}
     if type == 'CHOICE_QUE_NAME':
         question_type = CHOICE_QUE_NAME
-        all_status = [1,3,5,7]
+        all_status = [1, 3, 5, 7]
         status_value = 1
     elif type == 'CLOZE_QUE_NAME':
-        question_type=CLOZE_QUE_NAME
-        all_status = [2,3,6,7]
+        question_type = CLOZE_QUE_NAME
+        all_status = [2, 3, 6, 7]
         status_value = 2
     elif type == 'READING_QUE_NAME':
         question_type = READING_QUE_NAME
-        all_status = [4,5,6,7]
+        all_status = [4, 5, 6, 7]
         status_value = 3
-    if id:#传id指定查询
+    if id:  # 传id指定查询
         try:
             topic = Question.objects.get(id=id, type=question_type)
         except:
             return JsonResponse(data=wrap_response_data(3, '哦吼，本题可能已经被管理员删除啦', **data))
         return return_info(topic, id)
-    else:#随机刷题
+    else:  # 随机刷题
         if status in all_status:
             return return_wrongquestion(user_id, question_type, user, status, status_value)
         else:
-            #获取用户已经做过的所有题目的id
+            # 获取用户已经做过的所有题目的id
             haven_do = ListOfQuestion.objects.filter(openid=user_id).values('question__id')
-            #随机获取此类题型还没做过的题目
+            # 随机获取此类题型还没做过的题目
             this_question = Question.objects.filter(type=question_type).exclude(id__in=haven_do).order_by('?').first()
             if not this_question:
                 user.status = status + status_value
@@ -225,6 +232,6 @@ class wrong_que_bookClass(View):
     def delete(self, request):
         user_id = request.session['openid']
         id = request.GET['id']
-        wrong_question=WrongQuestions.objects.get(openid=user_id, question_id=id)
+        wrong_question = WrongQuestions.objects.get(openid=user_id, question_id=id)
         wrong_question.delete()
         return JsonResponse(data=wrap_response_data(0))

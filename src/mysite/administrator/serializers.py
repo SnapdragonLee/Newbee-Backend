@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Question, SubQuestion, Solution
+from .models import Question, SubQuestion, Solution, OperationRecord
 from rest_framework.serializers import SerializerMethodField
 from django.db.models import Q, F
 
@@ -24,7 +24,7 @@ class SubQuestionSerializer(serializers.ModelSerializer):
         model = SubQuestion
         fields = ['id', 'number', 'stem', 'answer', 'options', 'has_bad_solution']
 
-    def get_options(self, sub_question):
+    def get_options(self, sub_question: SubQuestion):
         data = [sub_question.A, sub_question.B, sub_question.C, sub_question.D]
         return data
 
@@ -50,3 +50,18 @@ class SolutionSerializer(serializers.ModelSerializer):
             return 1
         else:
             return 0
+
+
+class OperationRecordSerializer(serializers.ModelSerializer):
+    name = SerializerMethodField()
+    op_type = SerializerMethodField()
+
+    class Meta:
+        model = OperationRecord
+        fields = ['name', 'op_type', 'description']
+
+    def get_name(self, obj: OperationRecord):
+        return obj.admin.username
+
+    def get_op_type(self, obj: OperationRecord):
+        return obj.operation

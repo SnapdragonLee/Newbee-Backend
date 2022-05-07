@@ -4,3 +4,4 @@ venv/
 *dist/
 db.sqlite3
 *_initial.py
+*migrations/00*.py

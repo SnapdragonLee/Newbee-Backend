@@ -1,5 +1,3 @@
-from django.shortcuts import render
-from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from utils.response import wrap_response_data
 from utils.auth_decorators import admin_logged
@@ -9,11 +7,20 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from client import models as client_models
 from . import models as admin_models
 from client.serializers import ListUserSerializer
-from .serializers import ListQuestionSerializer, DesignatedQuestionSerializer, SubQuestionSerializer, SolutionSerializer
+from .serializers import ListQuestionSerializer, DesignatedQuestionSerializer, SubQuestionSerializer, \
+    SolutionSerializer, OperationRecordSerializer
 from django.utils.decorators import method_decorator
 import json
-from utils.defines import *
 from django.db import transaction
+import datetime
+from django.contrib.auth.models import User
+from administrator.models import OperationRecord
+
+
+def add_operation(op_type: OperationRecord.OP_TYPE,
+                  admin: User, description: str):
+    new_record = OperationRecord(operation=op_type, admin=admin, description=description)
+    new_record.save()
 
 
 # Create your views here.
@@ -69,7 +76,9 @@ class ListUser(View):
         try:
             with transaction.atomic():
                 for user_id in id_list:
-                    client_models.WXUser.objects.get(id=user_id).delete()
+                    wxuser_obj = client_models.WXUser.objects.get(id=user_id)
+                    add_operation(OperationRecord.OP_TYPE.DEL, request.user, '小程序用户: ' + wxuser_obj.user_name)
+                    wxuser_obj.delete()
         except Exception as e:
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, '部分或全部用户id不存在，未执行任何删除操作'))
@@ -117,7 +126,9 @@ class ListQuestion(View):
         try:
             with transaction.atomic():
                 for que_id in que_id_list:
-                    admin_models.Question.objects.get(id__exact=que_id).delete()
+                    que_obj = admin_models.Question.objects.get(id__exact=que_id)
+                    add_operation(OperationRecord.OP_TYPE.DEL, request.user, que_obj.title)
+                    que_obj.delete()
         except Exception as e:
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, '部分或全部题目id不存在，未执行任何删除操作'))
@@ -138,7 +149,7 @@ class DesignatedQuestion(View):
         serializer = DesignatedQuestionSerializer(que)
         data = json.loads(json.dumps(serializer.data))
 
-        sub_question_query_set = admin_models.SubQuestion.objects.filter(question__id=que_id).order_by('number')
+        sub_question_query_set = que.subquestion_set.order_by('number')
         serializer = SubQuestionSerializer(sub_question_query_set, many=True)
         sub_question_json_list = json.loads(json.dumps(serializer.data))
         data['sub_que'] = sub_question_json_list
@@ -182,6 +193,7 @@ class DesignatedQuestion(View):
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, '题目格式不正确'))
 
+        add_operation(OperationRecord.OP_TYPE.ADD, request.user, new_question.title)
         return JsonResponse(data=wrap_response_data(0, '题目上传成功'))
 
     @method_decorator(admin_logged)
@@ -255,6 +267,7 @@ class DesignatedQuestion(View):
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, '题目格式错误'))
 
+        add_operation(OperationRecord.OP_TYPE.MOD, request.user, father.title)
         return JsonResponse(data=wrap_response_data(0, '修改成功'))
 
 
@@ -284,6 +297,8 @@ class ListSolution(View):
         solution_id_list = request.GET.getlist('id')
 
         try:
+            sub_que_obj = admin_models.Solution.objects.get(id=solution_id_list[0]).subQuestion
+            que_obj = sub_que_obj.question
             with transaction.atomic():
                 for solution_id in solution_id_list:
                     admin_models.Solution.objects.get(id=solution_id).delete()
@@ -292,7 +307,9 @@ class ListSolution(View):
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, "有部分或全部题解id不合法，未执行任何删除操作"))
 
+        # add_operation(OperationRecord.OP_TYPE.DEL, request.user, que_obj.title + '  第' + str(sub_que_obj.number) + '小题题解')
         return JsonResponse(data=wrap_response_data(0))
+
 
 @admin_logged
 def has_bad_solution(request):
@@ -311,5 +328,49 @@ def has_bad_solution(request):
     return JsonResponse(data=wrap_response_data(0, **data))
 
 
-def get_notice(request):
-    return JsonResponse(data=wrap_response_data(0))
+def check_has_notice():
+    return True if admin_models.Notice.objects.count() >= 1 else False
+
+
+class NoticeViewClass(View):
+    @method_decorator(admin_logged)
+    def get(self, request):
+
+        if not check_has_notice():
+            notice_obj = admin_models.Notice()
+            notice_obj.save()
+        else:
+            notice_obj = admin_models.Notice.objects.all()[0]
+
+        data = {'content': notice_obj.content,
+                'time': str(notice_obj.time + datetime.timedelta(hours=8)).split('.')[0]}
+
+        return JsonResponse(data=wrap_response_data(0, **data))
+
+    @method_decorator(admin_logged)
+    def post(self, request):
+        try:
+            post_data = json.loads(request.body)
+            content = post_data['content']
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, 'json格式错误'))
+
+        if not check_has_notice():
+            notice_obj = admin_models.Notice()
+        else:
+            notice_obj = admin_models.Notice.objects.all()[0]
+
+        notice_obj.content = content
+        notice_obj.save()
+
+        add_operation(OperationRecord.OP_TYPE.MOD, request.user, '公告')
+        return JsonResponse(data=wrap_response_data(0))
+        pass
+
+
+def get_operation_record(request):
+    record_set = OperationRecord.objects.all()
+    serializer = OperationRecordSerializer(record_set, many=True)
+    data = {"records": json.loads(json.dumps(serializer.data))}
+    return JsonResponse(data=wrap_response_data(0,**data))

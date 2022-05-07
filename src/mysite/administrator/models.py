@@ -1,7 +1,12 @@
+from enum import Enum
+
+import django.utils.timezone
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.db.models import Q, F
 from utils.defines import *
+from django.contrib.auth.models import User
+import datetime
 
 
 # Create your models here.
@@ -108,6 +113,7 @@ class Solution(models.Model):
     content = models.TextField(verbose_name='题解内容')
     likes = models.IntegerField(verbose_name='点赞数')
     reports = models.IntegerField(verbose_name='举报数')
+
     # bad_solution = models.BooleanField(verbose_name='是否被举报过多', default=False)
 
     def __str__(self):
@@ -135,6 +141,38 @@ class Solution(models.Model):
 
 
 class Notice(models.Model):
-    data = models.DateTimeField(verbose_name='创建日期', auto_now=True)
-    content = models.TextField(verbose_name='公告内容')
+    time = models.DateTimeField(verbose_name='公告更新的时间', auto_now=True)
+    content = models.TextField(verbose_name='公告内容', default='welcome to NewBee English')
 
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+            super().save(*args, **kwargs)
+        except ValidationError as e:
+            raise e
+
+
+class OperationRecord(models.Model):
+    class OP_TYPE(models.TextChoices):
+        ADD = '添加', '添加'
+        MOD = '修改', '修改'
+        DEL = '删除', '删除'
+        OTHER = '其他', '其他'
+
+    admin = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='进行此操作的管理员')
+    operation = models.CharField(verbose_name='操作类型', max_length=20,
+                                 choices=OP_TYPE.choices,
+                                 default=OP_TYPE.ADD)
+
+    description = models.TextField(verbose_name='操作描述')
+    time = models.DateTimeField(verbose_name='操作时间', auto_now=True)
+
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+            super().save(*args, **kwargs)
+        except ValidationError as e:
+            raise e
+
+    class Meta:
+        ordering = ['-time']

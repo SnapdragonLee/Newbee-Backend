@@ -1,4 +1,4 @@
-from .models import WXUser
+from .models import WXUser, WrongQuestions
 from rest_framework import serializers
 from administrator.models import Question, SubQuestion, Solution
 from rest_framework.serializers import SerializerMethodField
@@ -44,9 +44,14 @@ class client_DesignatedQuestionSerializer(serializers.ModelSerializer):
         model = Question
         fields = ['id', 'title', 'text', 'sub_que_num']
 
-class client_ListQuestionSerializer(serializers.ModelSerializer):
-    # title = serializers.CharField(source='title')
-
+class QuestionSer(serializers.ModelSerializer):
     class Meta:
         model = Question
-        fields = ['id','title', 'date']
+        fields = ['id', 'title', 'type']
+
+class client_ListQuestionSerializer(serializers.ModelSerializer):
+    question = QuestionSer(read_only=True)
+
+    class Meta:
+        model = WrongQuestions
+        fields = ['date','question']

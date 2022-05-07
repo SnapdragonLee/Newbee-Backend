@@ -188,7 +188,7 @@ def return_question(type, id, user_id, user, status):
                 return return_wrongquestion(user_id, question_type, user, status, status_value)
             return return_info(this_question, this_question.id)
 
-#@user_logged
+@user_logged
 def get_question(request):
     # 获取传递的参数和需要使用的数据
     question_type = request.GET['type']
@@ -200,11 +200,11 @@ def get_question(request):
 
 
 class wrong_que_bookClass(View):
-    #@method_decorator(user_logged)
+    @method_decorator(user_logged)
     def get(self, request):
         page_number = request.GET['pagenumber']
-        page_size = request.GET['pagesize']
-        user_id = 123  # request.session['openid']
+        page_size = 12
+        user_id = request.session['openid']
         wrong_question_list = WrongQuestions.objects.filter(openid=user_id).order_by('-date')
         if not wrong_question_list:
             return JsonResponse(data=wrap_response_data(3, '目前还没有错题加入哦'))
@@ -214,18 +214,17 @@ class wrong_que_bookClass(View):
         data = {'list': json.loads(json.dumps(serializer.data))}
         return JsonResponse(data=wrap_response_data(0, **data))
 
-    #@method_decorator(user_logged)
+    @method_decorator(user_logged)
     def post(self, request):
-        user_id = 123  # request.session['openid']
+        user_id = request.session['openid']
         id = request.GET['id']
         WrongQuestions.objects.create(openid=user_id, question_id=id)
         return JsonResponse(data=wrap_response_data(0))
 
-    #@method_decorator(user_logged)
+    @method_decorator(user_logged)
     def delete(self, request):
-        user_id = 123  # request.session['openid']
+        user_id = request.session['openid']
         id = request.GET['id']
         wrong_question=WrongQuestions.objects.get(openid=user_id, question_id=id)
         wrong_question.delete()
         return JsonResponse(data=wrap_response_data(0))
-

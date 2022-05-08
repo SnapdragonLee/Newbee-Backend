@@ -1,8 +1,7 @@
-import hashlib
-from django.http import HttpResponse
-from django.contrib.auth import authenticate, login, logout
 import json
 import requests
+import datetime
+
 from .models import WXUser, WrongQuestions, ListOfQuestion, history
 from administrator.models import Question, SubQuestion
 from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, \
@@ -15,9 +14,12 @@ from utils.auth_decorators import user_logged
 from django.db import transaction
 from utils.defines import *
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
+from ..administrator import models as admin_models
 
 # Create your views here.
+from ..administrator.views import check_has_notice
+
+
 def user_login(request):
     appid = 'wx9cb76a70a7aba68a'
     secret = 'a79c0044ff02e5368cf3bc96704f7d76'
@@ -142,7 +144,8 @@ def return_info(this_question, question_id, flag):
 
 
 def return_wrongquestion(user_id, question_type, user, status, status_value):
-    wrong_question = WrongQuestions.objects.filter(openid=user_id, question__type=question_type,havedone=False).order_by('?').first()
+    wrong_question = WrongQuestions.objects.filter(openid=user_id, question__type=question_type,
+                                                   havedone=False).order_by('?').first()
     if not wrong_question:
         # 更新用户刷题阶段
         user.status = status - status_value
@@ -155,11 +158,11 @@ def return_wrongquestion(user_id, question_type, user, status, status_value):
         questions.delete()
         # 从题库中随机取一个该类型题目，由于刚清空记录表，省略了一些判断
         this_question = Question.objects.filter(type=question_type).order_by('?').first()
-        flag=0
+        flag = 0
         return return_info(this_question, this_question.id, flag)
     # 返回随机取到的没做过的错题
     this_question = Question.objects.get(id=wrong_question.question_id)
-    flag=1
+    flag = 1
     return return_info(this_question, wrong_question.question_id, flag)
 
 
@@ -184,7 +187,7 @@ def return_question(type, id, user_id, user, status):
             topic = Question.objects.get(id=id, type=question_type)
         except:
             return JsonResponse(data=wrap_response_data(3, '哦吼，本题可能已经被管理员删除啦', **data))
-        flag=0
+        flag = 0
         return return_info(topic, id, flag)
     else:  # 随机刷题
         if status in all_status:
@@ -199,8 +202,9 @@ def return_question(type, id, user_id, user, status):
                 status = user.status
                 user.save()
                 return return_wrongquestion(user_id, question_type, user, status, status_value)
-            flag=0
+            flag = 0
             return return_info(this_question, this_question.id, flag)
+
 
 @user_logged
 def get_question(request):
@@ -224,7 +228,7 @@ class wrong_que_bookClass(View):
             wrong_question_list = WrongQuestions.objects.filter(openid=user_id).order_by('-date')
         else:
             wrong_question_list = WrongQuestions.objects.filter(openid=user_id, question__type=type).order_by('-date')
-        #if not wrong_question_list:
+        # if not wrong_question_list:
         #    return JsonResponse(data=wrap_response_data(3, '目前还没有错题加入哦'))
         paginator = Paginator(wrong_question_list, page_size)
         que_list = paginator.get_page(page_number).object_list
@@ -246,6 +250,20 @@ class wrong_que_bookClass(View):
         wrong_question = WrongQuestions.objects.get(openid=user_id, question_id=id)
         wrong_question.delete()
         return JsonResponse(data=wrap_response_data(0))
+
+
+class NoticeViewClass(View):
+    @method_decorator(user_logged)
+    def get(self, request):
+        if check_has_notice():
+            notice_obj = admin_models.Notice.objects.all()[0]
+            data = {'content': notice_obj.content,
+                    'time': str(notice_obj.time + datetime.timedelta(hours=8)).split('.')[0]}
+            return JsonResponse(data=wrap_response_data(0, **data))
+
+        else:
+            return JsonResponse(data=wrap_response_data(3, '今天测试核酸了吗? 没测试就跑来搞英语? 这是一条默认公告'))
+
 
 '''    def record(request):
         user_id = 123  # request.session['openid']

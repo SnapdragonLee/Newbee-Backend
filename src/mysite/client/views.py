@@ -247,10 +247,32 @@ class wrong_que_bookClass(View):
         wrong_question.delete()
         return JsonResponse(data=wrap_response_data(0))
 
-'''    def record(request):
+
+class recordClass(View):
+    #@method_decorator(user_logged)
+    def get(self, request):
         user_id = 123  # request.session['openid']
         type = request.GET.get('type')
+        page_number = request.GET['pagenumber']
+        page_size = 12
         if not type:
-            question = history.object.filter(openid = user_id)
+            question_list = history.objects.filter(openid = user_id).order_by('-date')
         else:
-            question = history.object.filter()'''
+            question_list = history.objects.filter(openid = user_id, question__type=type).order_by('-date')
+        paginator = Paginator(question_list, page_size)
+        que_list = paginator.get_page(page_number).object_list
+        serializer = client_ListQuestionSerializer(que_list, many=True)
+        data = {'list': json.loads(json.dumps(serializer.data))}
+        return JsonResponse(data=wrap_response_data(0, **data))
+
+    #@method_decorator(user_logged)
+    def delete(self, request):
+        user_id = 123  # request.session['openid']
+        done_questions = ListOfQuestion.objects.filter(openid=user_id)
+        done_questions.delete()
+        question_history = history.objects.filter(openid=user_id)
+        question_history.delete()
+        wrong_questions = WrongQuestions.objects.filter(openid=user_id)
+        wrong_questions.update(havedone=False)
+        return JsonResponse(data=wrap_response_data(0))
+

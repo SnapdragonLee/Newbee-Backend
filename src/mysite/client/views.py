@@ -3,7 +3,7 @@ import requests
 import datetime
 
 from .models import WXUser, WrongQuestions, ListOfQuestion, history
-from administrator.models import Question, SubQuestion
+from administrator.models import Question, SubQuestion, Notice
 from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, \
     client_ListQuestionSerializer
 from utils.response import wrap_response_data
@@ -14,10 +14,8 @@ from utils.auth_decorators import user_logged
 from django.db import transaction
 from utils.defines import *
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from ..administrator import models as admin_models
 
 # Create your views here.
-from ..administrator.views import check_has_notice
 
 
 def user_login(request):
@@ -255,8 +253,8 @@ class wrong_que_bookClass(View):
 class NoticeViewClass(View):
     @method_decorator(user_logged)
     def get(self, request):
-        if check_has_notice():
-            notice_obj = admin_models.Notice.objects.all()[0]
+        if Notice.objects.count() >= 1:
+            notice_obj = Notice.objects.all()[0]
             data = {'content': notice_obj.content,
                     'time': str(notice_obj.time + datetime.timedelta(hours=8)).split('.')[0]}
             return JsonResponse(data=wrap_response_data(0, **data))

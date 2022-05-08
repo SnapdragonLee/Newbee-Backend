@@ -24,6 +24,7 @@ class Question(models.Model):
 
     text = models.TextField(verbose_name='文章', null=True, blank=True)
     sub_que_num = models.IntegerField(verbose_name='子问题数量', null=False)
+    bad_solution = models.BooleanField(verbose_name='是否含有坏题解', default=False)
 
     def __str__(self):
         return self.title
@@ -48,14 +49,7 @@ class Question(models.Model):
             raise e
 
     def has_bad_solution(self):
-        sub_que_set = SubQuestion.objects.filter(question=self)
-        ret = False
-        for sub_que in sub_que_set:
-            if sub_que.has_bad_solution():
-                ret = True
-                break
-
-        return ret
+        return self.bad_solution
 
 
 # django默认字段参数中的null和blank都是false，所以以下写法很冗余
@@ -68,6 +62,7 @@ class SubQuestion(models.Model):
     B = models.TextField(null=False)
     C = models.TextField(null=False)
     D = models.TextField(null=False)
+    bad_solution = models.BooleanField(verbose_name='是否含有坏题解', default=False)
 
     answer = models.CharField(verbose_name="答案", max_length=5,
                               choices=(('A', 'A'),
@@ -94,17 +89,17 @@ class SubQuestion(models.Model):
 
             self.full_clean()
             super().save(*args, **kwargs)
+
+            self.refresh_from_db()
+            if self.has_bad_solution():
+                self.question.bad_solution = True
+                self.question.save()
+
         except ValidationError as e:
             raise e
 
     def has_bad_solution(self):
-        solution_set = Solution.objects.filter(subQuestion=self)
-        ret = False
-        for solution in solution_set:
-            if solution.is_bad_solution():
-                ret = True
-                break
-        return ret
+        return self.bad_solution
 
 
 class Solution(models.Model):
@@ -136,6 +131,12 @@ class Solution(models.Model):
         try:
             self.full_clean()
             super().save(*args, **kwargs)
+
+            self.refresh_from_db()
+            if self.is_bad_solution():
+                self.subQuestion.bad_solution = True
+                self.subQuestion.save()
+
         except ValidationError as e:
             raise e
 

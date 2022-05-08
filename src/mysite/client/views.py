@@ -265,9 +265,9 @@ class NoticeViewClass(View):
 
 
 class recordClass(View):
-    #@method_decorator(user_logged)
+    @method_decorator(user_logged)
     def get(self, request):
-        user_id = 123#request.session['openid']
+        user_id = request.session['openid']
         type = request.GET.get('type')
         page_number = request.GET['pagenumber']
         page_size = 12

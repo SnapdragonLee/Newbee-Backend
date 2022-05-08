@@ -10,4 +10,5 @@ urlpatterns = [
     path('get_question', views.get_question, name='get_question'),
     path('wrong_que_book', views.wrong_que_bookClass.as_view()),
     path('record', views.recordClass.as_view()),
+    path('notice', views.NoticeViewClass.as_view(), name='user_notice'),
 ]

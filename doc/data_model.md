@@ -73,17 +73,27 @@
 
 
 
+### AdminApproveSolution
+
+| 列名     | 数据类型及精度 | 约束条件                | 说明               |
+| -------- | -------------- | ----------------------- | ------------------ |
+| admin    | int            | FOREIGN KEY(AdminTable) | 认可该题解的管理员 |
+| solution | int            | FOREIGN KEY(Solution)   | 被认可的题解       |
+
+
+
 ## 三、刷题功能
 
 ### Solution
 
-| 列名    | 数据类型及精度 | 约束条件                     | 说明             |
-| ------- | -------------- | ---------------------------- | ---------------- |
-| id      | int            | PRIMARY KEY, AUTO_INCREMENT  | 题解id           |
-| que_id  | int            | FOREIGN KEY(SubQuestion(id)) | 题解对应小题的id |
-| content | text           | NOT NULL                     | 题解内容         |
-| likes   | int            | CHECK(>=0)                   | 该题解被点赞次数 |
-| reports | int            | CHECK(>=0)                   | 该题解被举报次数 |
+| 列名     | 数据类型及精度 | 约束条件                     | 说明                     |
+| -------- | -------------- | ---------------------------- | ------------------------ |
+| id       | int            | PRIMARY KEY, AUTO_INCREMENT  | 题解id                   |
+| que_id   | int            | FOREIGN KEY(SubQuestion(id)) | 题解对应小题的id         |
+| content  | text           | NOT NULL                     | 题解内容                 |
+| likes    | int            | CHECK(>=0)                   | 该题解被点赞次数         |
+| reports  | int            | CHECK(>=0)                   | 该题解被举报次数         |
+| approval | int            | CHECK(>=0)                   | 该题解被管理员认可的次数 |
 
 
 

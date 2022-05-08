@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from .models import Question, SubQuestion, Solution, OperationRecord
+from .models import Question, SubQuestion, Solution, OperationRecord, AdminApproveSolution
 from rest_framework.serializers import SerializerMethodField
 from django.db.models import Q, F
+from django.contrib.auth.models import User
 
 
 class ListQuestionSerializer(serializers.ModelSerializer):
@@ -40,16 +41,21 @@ class DesignatedQuestionSerializer(serializers.ModelSerializer):
 
 class SolutionSerializer(serializers.ModelSerializer):
     bad_solution = SerializerMethodField()
+    approved = SerializerMethodField()
 
     class Meta:
         model = Solution
-        fields = ['id', 'content', 'likes', 'reports', 'bad_solution']
+        fields = ['id', 'content', 'likes', 'reports', 'bad_solution', 'approved']
 
     def get_bad_solution(self, solution_obj: Solution):
         if solution_obj.is_bad_solution():
             return 1
         else:
             return 0
+
+    def get_approved(self, obj: Solution):
+        return 1 if AdminApproveSolution.objects.filter(
+            Q(admin=self.context['request'].user) & Q(solution__id=obj.id)).exists() else 0
 
 
 class OperationRecordSerializer(serializers.ModelSerializer):

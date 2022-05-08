@@ -15,6 +15,7 @@ from django.db import transaction
 import datetime
 from django.contrib.auth.models import User
 from administrator.models import OperationRecord
+from django.db.models import Q, F
 
 
 def add_operation(op_type: OperationRecord.OP_TYPE,
@@ -284,7 +285,7 @@ class ListSolution(View):
 
         # total = query_set.count()
         total = len(query_set)
-        serializer = SolutionSerializer(query_set, many=True)
+        serializer = SolutionSerializer(query_set, many=True, context={'request': request})
 
         data = {'solutions': json.loads(json.dumps(serializer.data)),
                 'total': total}
@@ -308,6 +309,31 @@ class ListSolution(View):
             return JsonResponse(data=wrap_response_data(3, "有部分或全部题解id不合法，未执行任何删除操作"))
 
         # add_operation(OperationRecord.OP_TYPE.DEL, request.user, que_obj.title + '  第' + str(sub_que_obj.number) + '小题题解')
+        return JsonResponse(data=wrap_response_data(0))
+
+    @method_decorator(admin_logged)
+    def post(self, request):
+        try:
+            post_data = json.loads(request.body)
+            solution_id = post_data['solution_id']
+        except Exception as e:
+            print(e)
+            return JsonResponse(data=wrap_response_data(3, 'json参数格式错误'))
+
+        if admin_models.AdminApproveSolution.objects.filter(admin=request.user, solution__id=solution_id).exists():
+            return JsonResponse(data=wrap_response_data(3, '您已经确认过此题解'))
+
+        try:
+            with transaction.atomic():
+                solution = admin_models.Solution.objects.get(id=solution_id)
+                admin_models.AdminApproveSolution.objects.create(admin=request.user, solution=solution)
+                solution_obj = admin_models.Solution.objects.get(id__exact=solution_id)
+                solution_obj.approval += 1
+                solution_obj.save()
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, '题解id有误'))
+
         return JsonResponse(data=wrap_response_data(0))
 
 
@@ -373,4 +399,4 @@ def get_operation_record(request):
     record_set = OperationRecord.objects.all()
     serializer = OperationRecordSerializer(record_set, many=True)
     data = {"records": json.loads(json.dumps(serializer.data))}
-    return JsonResponse(data=wrap_response_data(0,**data))
+    return JsonResponse(data=wrap_response_data(0, **data))

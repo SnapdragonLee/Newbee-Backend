@@ -90,7 +90,7 @@ class SubQuestion(models.Model):
             self.full_clean()
             super().save(*args, **kwargs)
 
-            self.refresh_from_db()
+            # self.refresh_from_db()
             if self.has_bad_solution():
                 self.question.bad_solution = True
                 self.question.save()

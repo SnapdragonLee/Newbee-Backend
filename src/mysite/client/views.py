@@ -5,7 +5,7 @@ import datetime
 from .models import WXUser, WrongQuestions, ListOfQuestion, history, done_question
 from administrator.models import Question, SubQuestion, Notice
 from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, \
-    client_ListQuestionSerializer, client_ListDoneQuestionSerializer
+    client_ListQuestionSerializer, client_ListDoneQuestionSerializer, AnswerSerializer
 from utils.response import wrap_response_data
 from django.http import JsonResponse
 from django.views.generic.base import View
@@ -204,12 +204,12 @@ def return_question(type, id, user_id, user, status):
             return return_info(this_question, this_question.id, flag)
 
 
-@user_logged
+#@user_logged
 def get_question(request):
     # 获取传递的参数和需要使用的数据
     question_type = request.GET['type']
     id = request.GET.get('id')
-    user_id = request.session['openid']
+    user_id = 123#request.session['openid']
     user = WXUser.objects.get(id=user_id)
     status = user.status
     return return_question(question_type, id, user_id, user, status)
@@ -311,4 +311,22 @@ def detail(request):
     serializer = client_ListDoneQuestionSerializer(done_question_detail, many=True)
     done_question_detail_list = json.loads(json.dumps(serializer.data))
     data['sub_que'] = done_question_detail_list
+    return JsonResponse(data=wrap_response_data(0, **data))
+
+#@user_logged
+def check_question(request):
+    user_id = 123#request.session['openid']
+    type = request.GET['type']
+    id = request.GET['id']
+    #获取用户提交的答案
+    #answer=request.POST['answer']
+    data={}
+    history.objects.create(openid=user_id, question_id=id)
+    ListOfQuestion.objects.create(openid=user_id, question_id=id)
+
+
+
+    sub = SubQuestion.objects.filter(question_id=id).order_by('number')
+    serializer = AnswerSerializer(sub, many=True)
+    data['sub_que'] = json.loads(json.dumps(serializer.data))
     return JsonResponse(data=wrap_response_data(0, **data))

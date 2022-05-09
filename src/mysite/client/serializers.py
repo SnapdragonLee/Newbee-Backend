@@ -73,3 +73,8 @@ class client_ListDoneQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = done_question
         fields = ['sub_question', 'option']
+
+class AnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubQuestion
+        fields = ['number', 'answer']

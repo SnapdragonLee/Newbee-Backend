@@ -247,7 +247,10 @@ class wrong_que_bookClass(View):
     def delete(self, request):
         user_id = request.session['openid']
         id = request.GET['id']
-        wrong_question = WrongQuestions.objects.get(openid=user_id, question_id=id)
+        try:
+            wrong_question = WrongQuestions.objects.get(openid=user_id, question_id=id)
+        except:
+            return JsonResponse(data=wrap_response_data(3, "错题本查询不到对应题目"))
         wrong_question.delete()
         return JsonResponse(data=wrap_response_data(0))
 
@@ -298,7 +301,10 @@ class recordClass(View):
 def detail(request):
     user_id = request.session['openid']
     id = request.GET['id']
-    question = Question.objects.get(id=id)
+    try:
+        question = Question.objects.get(id=id)
+    except:
+        return JsonResponse(data=wrap_response_data(3, "查询不到该题目，可能被管理员删除了.,."))
     serializer = client_DesignatedQuestionSerializer(question)
     data = json.loads(json.dumps(serializer.data))
     done_question_detail = done_question.objects.filter(openid=user_id, question_id=id).order_by('sub_questionid')

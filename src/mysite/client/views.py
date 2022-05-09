@@ -2,10 +2,10 @@ import json
 import requests
 import datetime
 
-from .models import WXUser, WrongQuestions, ListOfQuestion, history
+from .models import WXUser, WrongQuestions, ListOfQuestion, history, done_question
 from administrator.models import Question, SubQuestion, Notice
 from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, \
-    client_ListQuestionSerializer
+    client_ListQuestionSerializer, client_ListDoneQuestionSerializer
 from utils.response import wrap_response_data
 from django.http import JsonResponse
 from django.views.generic.base import View
@@ -294,3 +294,15 @@ class recordClass(View):
         wrong_questions.update(havedone=False)
         return JsonResponse(data=wrap_response_data(0))
 
+@user_logged
+def detail(request):
+    user_id = request.session['openid']
+    id = request.GET['id']
+    question = Question.objects.get(id=id)
+    serializer = client_DesignatedQuestionSerializer(question)
+    data = json.loads(json.dumps(serializer.data))
+    done_question_detail = done_question.objects.filter(openid=user_id, question_id=id).order_by('sub_questionid')
+    serializer = client_ListDoneQuestionSerializer(done_question_detail, many=True)
+    done_question_detail_list = json.loads(json.dumps(serializer.data))
+    data['sub_que'] = done_question_detail_list
+    return JsonResponse(data=wrap_response_data(0, **data))

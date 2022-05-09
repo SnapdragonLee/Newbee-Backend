@@ -2,10 +2,10 @@ import json
 import requests
 import datetime
 
-from .models import WXUser, WrongQuestions, ListOfQuestion, history, UserApproveSolution
+from .models import WXUser, WrongQuestions, ListOfQuestion, history, done_question, UserApproveSolution
 from administrator.models import Question, SubQuestion, Notice
 from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, \
-    client_ListQuestionSerializer, ClientSolutionSerializer
+    client_ListQuestionSerializer, client_ListDoneQuestionSerializer, AnswerSerializer, ClientSolutionSerializer
 from utils.response import wrap_response_data
 from django.http import JsonResponse
 from django.views.generic.base import View
@@ -107,7 +107,7 @@ class SolutionViewClass(View):
     @method_decorator(user_logged)
     def get(self, request):
         try:
-            sub_que_id = request['id']
+            sub_que_id = request.GET['id']
         except Exception as e:
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, "json参数格式错误"))
@@ -268,12 +268,12 @@ def return_question(type, id, user_id, user, status):
             return return_info(this_question, this_question.id, flag)
 
 
-@user_logged
+# @user_logged
 def get_question(request):
     # 获取传递的参数和需要使用的数据
     question_type = request.GET['type']
     id = request.GET.get('id')
-    user_id = request.session['openid']
+    user_id = 123  # request.session['openid']
     user = WXUser.objects.get(id=user_id)
     status = user.status
     return return_question(question_type, id, user_id, user, status)
@@ -311,7 +311,10 @@ class wrong_que_bookClass(View):
     def delete(self, request):
         user_id = request.session['openid']
         id = request.GET['id']
-        wrong_question = WrongQuestions.objects.get(openid=user_id, question_id=id)
+        try:
+            wrong_question = WrongQuestions.objects.get(openid=user_id, question_id=id)
+        except:
+            return JsonResponse(data=wrap_response_data(3, "错题本查询不到对应题目"))
         wrong_question.delete()
         return JsonResponse(data=wrap_response_data(0))
 
@@ -357,3 +360,37 @@ class recordClass(View):
         wrong_questions = WrongQuestions.objects.filter(openid=user_id)
         wrong_questions.update(havedone=False)
         return JsonResponse(data=wrap_response_data(0))
+
+@user_logged
+def detail(request):
+    user_id = request.session['openid']
+    id = request.GET['id']
+    try:
+        question = Question.objects.get(id=id)
+    except:
+        return JsonResponse(data=wrap_response_data(3, "查询不到该题目，可能被管理员删除了.,."))
+    serializer = client_DesignatedQuestionSerializer(question)
+    data = json.loads(json.dumps(serializer.data))
+    done_question_detail = done_question.objects.filter(openid=user_id, question_id=id).order_by('sub_questionid')
+    serializer = client_ListDoneQuestionSerializer(done_question_detail, many=True)
+    done_question_detail_list = json.loads(json.dumps(serializer.data))
+    data['sub_que'] = done_question_detail_list
+    return JsonResponse(data=wrap_response_data(0, **data))
+
+
+# @user_logged
+def check_question(request):
+    user_id = 123  # request.session['openid']
+    type = request.GET['type']
+    id = request.GET['id']
+    # 获取用户提交的答案
+    # answer=request.POST['answer']
+    data = {}
+    history.objects.create(openid=user_id, question_id=id)
+    ListOfQuestion.objects.create(openid=user_id, question_id=id)
+
+    sub = SubQuestion.objects.filter(question_id=id).order_by('number')
+    serializer = AnswerSerializer(sub, many=True)
+    data['sub_que'] = json.loads(json.dumps(serializer.data))
+    return JsonResponse(data=wrap_response_data(0, **data))
+

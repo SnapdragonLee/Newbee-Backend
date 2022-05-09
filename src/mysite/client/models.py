@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User, UserManager
 from django.db.models import Q
 from utils.defines import *
-from administrator.models import Question, Notice, Solution
+from administrator.models import Question, Notice, Solution, SubQuestion
 
 
 # Create your models here.
@@ -103,6 +103,28 @@ class UserApproveSolution(models.Model):
     user = models.ForeignKey(WXUser, on_delete=models.CASCADE, verbose_name='评价此题解的用户')
     solution = models.ForeignKey(Solution, on_delete=models.CASCADE, verbose_name='被评价的题解')
     type = models.IntegerField(choices=Type.choices, verbose_name='用户评价此题解的类型')
+
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+            super().save(*args, **kwargs)
+        except ValidationError as e:
+            raise e
+
+
+class done_question(models.Model):
+    openid = models.CharField(verbose_name='用户的openid', max_length=50)
+    question_id = models.IntegerField(verbose_name='对应题目id')
+    sub_questionid = models.IntegerField(verbose_name='对应小题目id')
+    sub_question = models.ForeignKey(SubQuestion, on_delete=models.CASCADE, verbose_name="对应的小题")
+    option = models.CharField(verbose_name="用户选项", max_length=5,
+                              choices=(('A', 'A'),
+                                       ('B', 'B'),
+                                       ('C', 'C'),
+                                       ('D', 'D')), default='A')
+
+    def __str__(self):
+        return self.openid
 
     def save(self, *args, **kwargs):
         try:

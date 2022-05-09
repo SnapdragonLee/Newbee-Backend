@@ -11,4 +11,6 @@ urlpatterns = [
     path('wrong_que_book', views.wrong_que_bookClass.as_view()),
     path('record', views.recordClass.as_view()),
     path('notice', views.NoticeViewClass.as_view(), name='user_notice'),
+    path('detail', views.detail),
+    path('check_question', views.check_question),
 ]

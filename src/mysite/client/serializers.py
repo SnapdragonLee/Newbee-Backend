@@ -1,4 +1,4 @@
-from .models import WXUser, WrongQuestions
+from .models import WXUser, WrongQuestions, done_question
 from rest_framework import serializers
 from administrator.models import Question, SubQuestion, Solution
 from rest_framework.serializers import SerializerMethodField
@@ -75,3 +75,29 @@ class ClientSolutionSerializer(serializers.ModelSerializer):
             return 0
         else:
             return query_set[0].type
+
+
+class SubQuestionSer(serializers.ModelSerializer):
+    options = SerializerMethodField()
+
+    class Meta:
+        model = SubQuestion
+        fields = ['number', 'stem', 'options', 'answer']
+
+    def get_options(self, sub_question):
+        data = [sub_question.A, sub_question.B, sub_question.C, sub_question.D]
+        return data
+
+
+class client_ListDoneQuestionSerializer(serializers.ModelSerializer):
+    sub_question = SubQuestionSer(read_only=True)
+
+    class Meta:
+        model = done_question
+        fields = ['sub_question', 'option']
+
+
+class AnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubQuestion
+        fields = ['number', 'answer']

@@ -343,8 +343,9 @@ def has_bad_solution(request):
     has = False
     for solution in query_set:
         if solution.is_bad_solution():
-            has = True
-            break
+            if not admin_models.AdminApproveSolution.objects.filter(admin=request.user, solution=solution).exists():
+                has = True
+                break
 
     if has:
         data = {'has_bad_solution': 1}

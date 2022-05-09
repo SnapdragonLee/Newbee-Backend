@@ -3,7 +3,8 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User, UserManager
 from django.db.models import Q
 from utils.defines import *
-from administrator.models import Question, SubQuestion
+from administrator.models import Question, SubQuestion, Notice
+
 
 # Create your models here.
 

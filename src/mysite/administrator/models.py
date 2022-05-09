@@ -92,8 +92,13 @@ class SubQuestion(models.Model):
 
             # self.refresh_from_db()
             if self.has_bad_solution():
-                self.question.bad_solution = True
-                self.question.save()
+                if not self.question.has_bad_solution():
+                    self.question.bad_solution = True
+                    self.question.save()
+            else:
+                if self.question.has_bad_solution():
+                    self.question.bad_solution = False
+                    self.question.save()
 
         except ValidationError as e:
             raise e
@@ -106,10 +111,9 @@ class Solution(models.Model):
     id = models.AutoField(verbose_name='题解id', primary_key=True)
     subQuestion = models.ForeignKey(SubQuestion, on_delete=models.CASCADE, verbose_name="题解对应子题目的id")
     content = models.TextField(verbose_name='题解内容')
-    likes = models.IntegerField(verbose_name='点赞数')
-    reports = models.IntegerField(verbose_name='举报数')
-
-    # bad_solution = models.BooleanField(verbose_name='是否被举报过多', default=False)
+    likes = models.IntegerField(verbose_name='点赞数', default=0)
+    reports = models.IntegerField(verbose_name='举报数', default=0)
+    approval = models.IntegerField(verbose_name='被管理员认可的次数', default=0)
 
     def __str__(self):
         return str(self.content)[0:20]
@@ -117,12 +121,13 @@ class Solution(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(check=Q(likes__gte=0), name='check_likes'),
-            models.CheckConstraint(check=Q(reports__gte=0), name='check_reports')
+            models.CheckConstraint(check=Q(reports__gte=0), name='check_reports'),
+            models.CheckConstraint(check=Q(approval__gte=0), name='check_approval')
         ]
 
     def is_bad_solution(self):
         # self.refresh_from_db()
-        if self.reports > 10 and (self.reports > self.likes * 3):
+        if self.reports > 10 and ((self.reports - self.approval * 5) > self.likes * 2):
             return True
         else:
             return False
@@ -134,8 +139,13 @@ class Solution(models.Model):
 
             self.refresh_from_db()
             if self.is_bad_solution():
-                self.subQuestion.bad_solution = True
-                self.subQuestion.save()
+                if not self.subQuestion.has_bad_solution():
+                    self.subQuestion.bad_solution = True
+                    self.subQuestion.save()
+            else:
+                if self.subQuestion.has_bad_solution():
+                    self.subQuestion.bad_solution = False
+                    self.subQuestion.save()
 
         except ValidationError as e:
             raise e
@@ -177,3 +187,18 @@ class OperationRecord(models.Model):
 
     class Meta:
         ordering = ['-time']
+
+
+class AdminApproveSolution(models.Model):
+    admin = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='认可该题解的管理员')
+    solution = models.ForeignKey(Solution, on_delete=models.CASCADE, verbose_name='被认可的题解')
+
+    def __str__(self):
+        return self.admin.username + " 确认了 id为" + str(self.solution.id) + " 的题解"
+
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+            super().save(*args, **kwargs)
+        except ValidationError as e:
+            raise e

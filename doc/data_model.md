@@ -106,6 +106,16 @@
 
 
 
+### UserApproveSolution
+
+| 列名     | 数据类型及精度 | 约束条件                  | 说明                                 |
+| -------- | -------------- | ------------------------- | ------------------------------------ |
+| user     | int            | FOREIGN KEY(UserTable)    | 小程序用户                           |
+| solution | int            | FOREIGN KEY(Solution)     | 题解                                 |
+| type     | int            | NOT NULL,  CHECK(in{1,2}) | 1表示用户点赞题解，2表示用户举报题解 |
+
+
+
 ## 四、用户成绩分析功能
 
 ### Record

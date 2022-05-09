@@ -396,7 +396,19 @@ class NoticeViewClass(View):
 
 
 def get_operation_record(request):
-    record_set = OperationRecord.objects.all()
-    serializer = OperationRecordSerializer(record_set, many=True)
-    data = {"records": json.loads(json.dumps(serializer.data))}
+    try:
+        page_num = request.GET['pagenumber']
+        page_size = request.GET['pagesize']
+    except Exception as e:
+        print(e.args)
+        return JsonResponse(data=wrap_response_data(3, "json参数格式错误"))
+
+    query_set = OperationRecord.objects.all()
+    total = query_set.count()
+    paginator = Paginator(query_set, page_size)
+    op_record_list = paginator.get_page(page_num).object_list
+    serializer = OperationRecordSerializer(op_record_list, many=True)
+    data = {"records": json.loads(json.dumps(serializer.data)),
+            "total": total}
+
     return JsonResponse(data=wrap_response_data(0, **data))

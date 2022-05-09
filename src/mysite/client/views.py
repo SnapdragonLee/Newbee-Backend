@@ -2,10 +2,10 @@ import json
 import requests
 import datetime
 
-from .models import WXUser, WrongQuestions, ListOfQuestion, history
+from .models import WXUser, WrongQuestions, ListOfQuestion, history, UserApproveSolution
 from administrator.models import Question, SubQuestion, Notice
 from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, \
-    client_ListQuestionSerializer
+    client_ListQuestionSerializer, ClientSolutionSerializer
 from utils.response import wrap_response_data
 from django.http import JsonResponse
 from django.views.generic.base import View
@@ -14,6 +14,8 @@ from utils.auth_decorators import user_logged
 from django.db import transaction
 from utils.defines import *
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from administrator import models as admin_models
+
 
 # Create your views here.
 
@@ -104,30 +106,92 @@ class UserProfile(View):
 class SolutionViewClass(View):
     @method_decorator(user_logged)
     def get(self, request):
-        pass
+        try:
+            sub_que_id = request['id']
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, "json参数格式错误"))
+
+        solution_list = admin_models.Solution.objects.filter(subQuestion__id=sub_que_id)
+        serializer = ClientSolutionSerializer(solution_list, many=True, context={'openid': request.session['openid']})
+        num = len(solution_list)
+        data = {"solution_num": num,
+                "solution": json.loads(json.dumps(serializer.data))}
+
+        return JsonResponse(data=wrap_response_data(0, **data))
 
     @method_decorator(user_logged)
     def post(self, request):
-        pass
+        try:
+            post_data = json.loads(request.body)
+            sub_que_id = post_data['id']
+            content = post_data['solution']
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, "json参数格式错误"))
+
+        try:
+            sub_que_obj = admin_models.SubQuestion.objects.get(id__exact=sub_que_id)
+        except Exception as e:
+            print(e.args)
+            return JsonResponse(data=wrap_response_data(3, "不存在为该id的子题目"))
+
+        admin_models.Solution.objects.create(subQuestion=sub_que_obj, content=content)
+        return JsonResponse(data=wrap_response_data(0))
 
 
 @user_logged
 def solution_like(request):
     try:
         post_data = json.loads(request.body)
-        solution_id = post_data['solution_id']
+        solution_id = post_data['id']
     except Exception as e:
         print(e.args)
         return JsonResponse(data=wrap_response_data(3, 'json格式不符'))
 
-    # todo 同一个用户对同一个题解只能点赞或举报一次
+    user = WXUser.objects.get(id=request.session['openid'])
+
+    if UserApproveSolution.objects.filter(user=user, solution__id=solution_id).exists():
+        return JsonResponse(data=wrap_response_data(3, '已经点赞或举报过'))
+
+    try:
+        with transaction.atomic():
+            solution = admin_models.Solution.objects.get(id=solution_id)
+            solution.likes += 1
+            solution.save()
+            UserApproveSolution.objects.create(user=user, solution=solution, type=UserApproveSolution.Type.LIKE)
+    except Exception as e:
+        print(e.args)
+        return JsonResponse(data=wrap_response_data(3, '题解id不合法'))
+
+    return JsonResponse(data=wrap_response_data(0))
 
 
 @user_logged
 def solution_report(request):
-    # todo 同一个用户对同一个题解只能点赞或举报一次
+    try:
+        post_data = json.loads(request.body)
+        solution_id = post_data['id']
+    except Exception as e:
+        print(e.args)
+        return JsonResponse(data=wrap_response_data(3, 'json格式不符'))
 
-    pass
+    user = WXUser.objects.get(id=request.session['openid'])
+
+    if UserApproveSolution.objects.filter(user=user, solution__id=solution_id).exists():
+        return JsonResponse(data=wrap_response_data(3, '已经点赞或举报过'))
+
+    try:
+        with transaction.atomic():
+            solution = admin_models.Solution.objects.get(id=solution_id)
+            solution.reports += 1
+            solution.save()
+            UserApproveSolution.objects.create(user=user, solution=solution, type=UserApproveSolution.Type.REPORT)
+    except Exception as e:
+        print(e.args)
+        return JsonResponse(data=wrap_response_data(3, '题解id不合法'))
+
+    return JsonResponse(data=wrap_response_data(0))
 
 
 def return_info(this_question, question_id, flag):
@@ -233,7 +297,7 @@ class wrong_que_bookClass(View):
         que_list = paginator.get_page(page_number).object_list
         serializer = client_ListQuestionSerializer(que_list, many=True)
         data = {'list': json.loads(json.dumps(serializer.data)),
-                'total':total}
+                'total': total}
         return JsonResponse(data=wrap_response_data(0, **data))
 
     @method_decorator(user_logged)
@@ -272,10 +336,10 @@ class recordClass(View):
         page_number = request.GET['pagenumber']
         page_size = 12
         if not type:
-            question_list = history.objects.filter(openid = user_id).order_by('-date')
+            question_list = history.objects.filter(openid=user_id).order_by('-date')
         else:
-            question_list = history.objects.filter(openid = user_id, question__type=type).order_by('-date')
-        total=len(question_list)
+            question_list = history.objects.filter(openid=user_id, question__type=type).order_by('-date')
+        total = len(question_list)
         paginator = Paginator(question_list, page_size)
         que_list = paginator.get_page(page_number).object_list
         serializer = client_ListQuestionSerializer(que_list, many=True)
@@ -293,4 +357,3 @@ class recordClass(View):
         wrong_questions = WrongQuestions.objects.filter(openid=user_id)
         wrong_questions.update(havedone=False)
         return JsonResponse(data=wrap_response_data(0))
-

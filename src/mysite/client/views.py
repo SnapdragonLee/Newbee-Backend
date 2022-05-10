@@ -268,7 +268,7 @@ def return_question(type, id, user_id, user, status):
             return return_info(this_question, this_question.id, flag)
 
 
-# @user_logged
+@user_logged
 def get_question(request):
     # 获取传递的参数和需要使用的数据
     question_type = request.GET['type']
@@ -394,16 +394,28 @@ def detail(request):
 # @user_logged
 def check_question(request):
     user_id = request.session['openid']
-    type = request.GET['type']
-    id = request.GET['id']
+
+    post_data = json.loads(request.body)
+    id = post_data['id']
+    type = post_data['type']
+    data = post_data['data']
+
+
+
     # 获取用户提交的答案
     # answer=request.POST['answer']
-    data = {}
     history.objects.create(openid=user_id, question_id=id)
     ListOfQuestion.objects.create(openid=user_id, question_id=id)
+
+    
+
+    # 查答案
+    # judge 和 情况判断，更新 WXuser 字段
+    # 更新或创建新数据的 判断
+    #
+
 
     sub = SubQuestion.objects.filter(question_id=id).order_by('number')
     serializer = AnswerSerializer(sub, many=True)
     data['sub_que'] = json.loads(json.dumps(serializer.data))
     return JsonResponse(data=wrap_response_data(0, **data))
-

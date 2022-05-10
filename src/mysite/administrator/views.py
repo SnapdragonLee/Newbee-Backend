@@ -151,7 +151,7 @@ class DesignatedQuestion(View):
         data = json.loads(json.dumps(serializer.data))
 
         sub_question_query_set = que.subquestion_set.order_by('number')
-        serializer = SubQuestionSerializer(sub_question_query_set, many=True)
+        serializer = SubQuestionSerializer(sub_question_query_set, many=True, context={'admin': request.user})
         sub_question_json_list = json.loads(json.dumps(serializer.data))
         data['sub_que'] = sub_question_json_list
 
@@ -328,8 +328,7 @@ class ListSolution(View):
                 solution = admin_models.Solution.objects.get(id=solution_id)
                 admin_models.AdminApproveSolution.objects.create(admin=request.user, solution=solution)
                 solution_obj = admin_models.Solution.objects.get(id__exact=solution_id)
-                solution_obj.approval += 1
-                solution_obj.save()
+                solution_obj.add_approval()
         except Exception as e:
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, '题解id有误'))

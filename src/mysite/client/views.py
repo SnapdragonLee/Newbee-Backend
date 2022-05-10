@@ -115,8 +115,8 @@ class SolutionViewClass(View):
         solution_list = admin_models.Solution.objects.filter(subQuestion__id=sub_que_id)
         serializer = ClientSolutionSerializer(solution_list, many=True, context={'openid': request.session['openid']})
         num = len(solution_list)
-        data = {"solution_num": num,
-                "solution": json.loads(json.dumps(serializer.data))}
+        data = {'solution_num': num,
+                'solution': json.loads(json.dumps(serializer.data))}
 
         return JsonResponse(data=wrap_response_data(0, **data))
 
@@ -389,7 +389,7 @@ def detail(request):
     return JsonResponse(data=wrap_response_data(0, **data))
 
 
-# @user_logged
+@user_logged
 def check_question(request):
     user_id = request.session['openid']
 
@@ -398,22 +398,49 @@ def check_question(request):
     type = post_data['type']
     data = post_data['data']
 
-
-
-    # 获取用户提交的答案
-    # answer=request.POST['answer']
     history.objects.create(openid=user_id, question_id=id)
     ListOfQuestion.objects.create(openid=user_id, question_id=id)
+    answers = SubQuestion.objects.filter(question_id=id).values('number', 'answer')
 
-    
+    WXsubmit = WXUser.objects.get(id=user_id)
 
-    # 查答案
-    # judge 和 情况判断，更新 WXuser 字段
-    # 更新或创建新数据的 判断
-    #
+    operate = 0  # need update
+    if done_question.objects.fileter(openid=user_id, question_id=id) is None:
+        operate = 1  # need create
 
+    i = 0
+    for item in data:
+        if item['sub_id'] == answers[i]['number']:
+            if type == CHOICE_QUE_NAME:
+                if item['submit'] == answers[i]["answer"]:
+                    WXsubmit.right_choice += 1
+                WXsubmit.total_choice += 1
 
-    sub = SubQuestion.objects.filter(question_id=id).order_by('number')
+            elif type == CLOZE_QUE_NAME:
+                if item['submit'] == answers[i]["answer"]:
+                    WXsubmit.right_cloze += 1
+                WXsubmit.total_cloze += 1
+
+            else:
+                if item['submit'] == answers[i]["answer"]:
+                    WXsubmit.right_reading += 1
+                WXsubmit.total_reading += 1
+
+            if operate == 1:
+                done_question.objects.create(openid=user_id, question_id=id, sub_questionid=item['sub_id'],
+                                             option=item["submit"])
+            else:
+                obj = done_question.objects.get(openid=user_id, question_id=id, sub_questionid=item['sub_id'])
+                obj.option = item["submit"]
+                obj.save()
+
+        else:
+            return JsonResponse(data=wrap_response_data(3, "没有对应的小题"))
+        i += 1
+
+    WXsubmit.save()
+
+    sub = SubQuestion.objects.filter(question_id=id)
     serializer = AnswerSerializer(sub, many=True)
     data['sub_que'] = json.loads(json.dumps(serializer.data))
     return JsonResponse(data=wrap_response_data(0, **data))

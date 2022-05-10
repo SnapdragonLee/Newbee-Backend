@@ -13,4 +13,5 @@ urlpatterns = [
     path('notice', views.NoticeViewClass.as_view(), name='user_notice'),
     path('detail', views.detail),
     path('check_question', views.check_question),
+    path('single_history', views.single_history),
 ]

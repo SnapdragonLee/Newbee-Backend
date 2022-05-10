@@ -332,9 +332,9 @@ class NoticeViewClass(View):
 
 
 class recordClass(View):
-    @method_decorator(user_logged)
+    #@method_decorator(user_logged)
     def get(self, request):
-        user_id = request.session['openid']
+        user_id = 123#request.session['openid']
         type = request.GET.get('type')
         page_number = request.GET['pagenumber']
         page_size = 12
@@ -360,6 +360,19 @@ class recordClass(View):
         wrong_questions = WrongQuestions.objects.filter(openid=user_id)
         wrong_questions.update(havedone=False)
         return JsonResponse(data=wrap_response_data(0))
+
+
+#@user_logged
+def single_history(request):
+    user_id = 123#request.session['openid']
+    id = request.GET['id']
+    date = request.GET['date']
+    delete_history = history.objects.get(openid=user_id, question_id=id, date=date)
+    delete_history.delete()
+    question = ListOfQuestion.objects.get(openid=user_id, question_id=id)
+    question.delete()
+    return JsonResponse(data=wrap_response_data(0))
+
 
 @user_logged
 def detail(request):

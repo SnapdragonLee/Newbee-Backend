@@ -271,7 +271,7 @@ def get_question(request):
     # 获取传递的参数和需要使用的数据
     question_type = request.GET['type']
     id = request.GET.get('id')
-    user_id = 123  # request.session['openid']
+    user_id = request.session['openid']
     user = WXUser.objects.get(id=user_id)
     status = user.status
     return return_question(question_type, id, user_id, user, status)
@@ -391,7 +391,7 @@ def detail(request):
 
 # @user_logged
 def check_question(request):
-    user_id = 123  # request.session['openid']
+    user_id = request.session['openid']
     type = request.GET['type']
     id = request.GET['id']
     # 获取用户提交的答案

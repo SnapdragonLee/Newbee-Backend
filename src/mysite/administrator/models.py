@@ -24,7 +24,13 @@ class Question(models.Model):
 
     text = models.TextField(verbose_name='文章', null=True, blank=True)
     sub_que_num = models.IntegerField(verbose_name='子问题数量', null=False)
-    bad_solution = models.BooleanField(verbose_name='是否含有坏题解', default=False)
+    bad_sub_que_num = models.IntegerField(verbose_name='该题目包含的含有坏题解的子题目的数量', default=0)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(check=Q(bad_sub_que_num__gte=0) & Q(bad_sub_que_num__lte=F('sub_que_num')),
+                                   name='check_bad_sub_que_num')
+        ]
 
     def __str__(self):
         return self.title
@@ -48,8 +54,16 @@ class Question(models.Model):
         except ValidationError as e:
             raise e
 
+    def add_bad_sub_que(self):
+        self.bad_sub_que_num += 1
+        self.save()
+
+    def reduce_bad_sub_que(self):
+        self.bad_sub_que_num -= 1
+        self.save()
+
     def has_bad_solution(self):
-        return self.bad_solution
+        return True if self.bad_sub_que_num > 0 else False
 
 
 # django默认字段参数中的null和blank都是false，所以以下写法很冗余
@@ -62,13 +76,18 @@ class SubQuestion(models.Model):
     B = models.TextField(null=False)
     C = models.TextField(null=False)
     D = models.TextField(null=False)
-    bad_solution = models.BooleanField(verbose_name='是否含有坏题解', default=False)
+    bad_solution_num = models.IntegerField(verbose_name='含有坏题解的数量', default=0)
 
     answer = models.CharField(verbose_name="答案", max_length=5,
                               choices=(('A', 'A'),
                                        ('B', 'B'),
                                        ('C', 'C'),
                                        ('D', 'D')), default='A')
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(check=Q(bad_solution_num__gte=0), name='check_bad_solution_num')
+        ]
 
     def __str__(self):
         return 'id:' + str(self.id) + '   题干:' + str(self.stem)
@@ -82,6 +101,18 @@ class SubQuestion(models.Model):
         if not (1 <= self.number <= self.question.sub_que_num):
             raise ValidationError
 
+    def reduce_bad_solution(self):
+        self.bad_solution_num -= 1
+        if self.bad_solution_num == 0:
+            self.question.reduce_bad_sub_que()
+        self.save()
+
+    def add_bad_solution(self):
+        self.bad_solution_num += 1
+        if self.bad_solution_num == 1:
+            self.question.add_bad_sub_que()
+        self.save()
+
     def save(self, *args, **kwargs):
         try:
             if self.stem is not None and self.stem.strip().__len__() == 0:
@@ -90,21 +121,11 @@ class SubQuestion(models.Model):
             self.full_clean()
             super().save(*args, **kwargs)
 
-            # self.refresh_from_db()
-            if self.has_bad_solution():
-                if not self.question.has_bad_solution():
-                    self.question.bad_solution = True
-                    self.question.save()
-            else:
-                if self.question.has_bad_solution():
-                    self.question.bad_solution = False
-                    self.question.save()
-
         except ValidationError as e:
             raise e
 
     def has_bad_solution(self):
-        return self.bad_solution
+        return True if self.bad_solution_num > 0 else False
 
 
 class Solution(models.Model):
@@ -132,20 +153,34 @@ class Solution(models.Model):
         else:
             return False
 
+    def add_like(self):
+        before = self.is_bad_solution()
+        self.likes += 1
+        after = self.is_bad_solution()
+        if before and not after:
+            self.subQuestion.reduce_bad_solution()
+        self.save()
+
+    def add_report(self):
+        before = self.is_bad_solution()
+        self.reports += 1
+        after = self.is_bad_solution()
+        if not before and after:
+            self.subQuestion.add_bad_solution()
+        self.save()
+
+    def add_approval(self):
+        before = self.is_bad_solution()
+        self.approval += 1
+        after = self.is_bad_solution()
+        if before and not after:
+            self.subQuestion.reduce_bad_solution()
+        self.save()
+
     def save(self, *args, **kwargs):
         try:
             self.full_clean()
             super().save(*args, **kwargs)
-
-            self.refresh_from_db()
-            if self.is_bad_solution():
-                if not self.subQuestion.has_bad_solution():
-                    self.subQuestion.bad_solution = True
-                    self.subQuestion.save()
-            else:
-                if self.subQuestion.has_bad_solution():
-                    self.subQuestion.bad_solution = False
-                    self.subQuestion.save()
 
         except ValidationError as e:
             raise e

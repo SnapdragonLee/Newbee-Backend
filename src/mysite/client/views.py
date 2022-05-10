@@ -157,8 +157,7 @@ def solution_like(request):
     try:
         with transaction.atomic():
             solution = admin_models.Solution.objects.get(id=solution_id)
-            solution.likes += 1
-            solution.save()
+            solution.add_like()
             UserApproveSolution.objects.create(user=user, solution=solution, type=UserApproveSolution.Type.LIKE)
     except Exception as e:
         print(e.args)
@@ -184,8 +183,7 @@ def solution_report(request):
     try:
         with transaction.atomic():
             solution = admin_models.Solution.objects.get(id=solution_id)
-            solution.reports += 1
-            solution.save()
+            solution.add_report()
             UserApproveSolution.objects.create(user=user, solution=solution, type=UserApproveSolution.Type.REPORT)
     except Exception as e:
         print(e.args)

@@ -115,7 +115,7 @@ class ListQuestion(View):
         que_list = paginator.get_page(page_number).object_list
         # total = query_set.count()
         total = len(query_set)
-        serializer = ListQuestionSerializer(que_list, many=True)
+        serializer = ListQuestionSerializer(que_list, many=True, context={'admin': request.user})
         data = {'list': json.loads(json.dumps(serializer.data)),
                 'total': total}
         return JsonResponse(data=wrap_response_data(0, **data))
@@ -233,7 +233,7 @@ class DesignatedQuestion(View):
                 father.sub_que_num = father_sub_que_num
                 father.save()
 
-                child_query_set = admin_models.SubQuestion.objects.filter(question__id=father_id).order_by('number')
+                child_query_set = admin_models.SubQuestion.objects.filter(question_id=father_id).order_by('number')
 
                 i = 0
                 while i < new_child_cnt:
@@ -243,6 +243,7 @@ class DesignatedQuestion(View):
                     C = child_input_list[i]['options'][2]
                     D = child_input_list[i]['options'][3]
                     answer = child_input_list[i]['answer']
+                    number = child_input_list[i]['number']
 
                     if i < old_child_cnt:
                         child_object = child_query_set[i]
@@ -252,9 +253,10 @@ class DesignatedQuestion(View):
                         child_object.C = C
                         child_object.D = D
                         child_object.answer = answer
+                        child_object.number = number
                     else:
                         child_object = admin_models.SubQuestion(question=father, stem=stem,
-                                                                answer=answer, number=i + 1,
+                                                                answer=answer, number=number,
                                                                 A=A, B=B, C=C, D=D)
 
                     child_object.save()
@@ -281,7 +283,7 @@ class ListSolution(View):
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, '获取题解时，提供的参数格式有误'))
 
-        query_set = admin_models.Solution.objects.filter(subQuestion__id=sub_que_id).order_by('-reports')
+        query_set = admin_models.Solution.objects.filter(subQuestion_id=sub_que_id).order_by('-reports')
 
         # total = query_set.count()
         total = len(query_set)
@@ -320,13 +322,12 @@ class ListSolution(View):
             print(e)
             return JsonResponse(data=wrap_response_data(3, 'json参数格式错误'))
 
-        if admin_models.AdminApproveSolution.objects.filter(admin=request.user, solution__id=solution_id).exists():
+        if admin_models.AdminApproveSolution.objects.filter(admin=request.user, solution_id=solution_id).exists():
             return JsonResponse(data=wrap_response_data(3, '您已经确认过此题解'))
 
         try:
             with transaction.atomic():
-                solution = admin_models.Solution.objects.get(id=solution_id)
-                admin_models.AdminApproveSolution.objects.create(admin=request.user, solution=solution)
+                admin_models.AdminApproveSolution.objects.create(admin=request.user, solution_id=solution_id)
                 solution_obj = admin_models.Solution.objects.get(id__exact=solution_id)
                 solution_obj.add_approval()
         except Exception as e:
@@ -338,18 +339,11 @@ class ListSolution(View):
 
 @admin_logged
 def has_bad_solution(request):
-    query_set = admin_models.Solution.objects.all()
-    has = False
-    for solution in query_set:
-        if solution.is_bad_solution():
-            if not admin_models.AdminApproveSolution.objects.filter(admin=request.user, solution=solution).exists():
-                has = True
-                break
-
-    if has:
-        data = {'has_bad_solution': 1}
-    else:
-        data = {'has_bad_solution': 0}
+    bad_solution_sum = admin_models.Solution.objects.filter(is_bad=True).count()
+    approved_bad_solution_num = admin_models.AdminApproveSolution.objects.filter(admin=request.user,
+                                                                                 solution__is_bad=True).count()
+    has = 0 if bad_solution_sum == approved_bad_solution_num else 1
+    data = {'has_bad_solution': has}
 
     return JsonResponse(data=wrap_response_data(0, **data))
 

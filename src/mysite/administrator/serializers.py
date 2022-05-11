@@ -14,7 +14,7 @@ class ListQuestionSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'sub_que_num', 'has_bad_solution']
 
     def get_has_bad_solution(self, que_obj: Question):
-        return 1 if que_obj.has_bad_solution() else 0
+        return 1 if que_obj.has_bad_solution(self.context['admin']) else 0
 
 
 class SubQuestionSerializer(serializers.ModelSerializer):
@@ -30,7 +30,7 @@ class SubQuestionSerializer(serializers.ModelSerializer):
         return data
 
     def get_has_bad_solution(self, sub_que_obj: SubQuestion):
-        return 1 if sub_que_obj.has_bad_solution() else 0
+        return 1 if sub_que_obj.has_bad_solution(self.context['admin']) else 0
 
 
 class DesignatedQuestionSerializer(serializers.ModelSerializer):
@@ -55,7 +55,7 @@ class SolutionSerializer(serializers.ModelSerializer):
 
     def get_approved(self, obj: Solution):
         return 1 if AdminApproveSolution.objects.filter(
-            Q(admin=self.context['request'].user) & Q(solution__id=obj.id)).exists() else 0
+            Q(admin=self.context['request'].user) & Q(solution=obj)).exists() else 0
 
 
 class OperationRecordSerializer(serializers.ModelSerializer):

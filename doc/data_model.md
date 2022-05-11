@@ -47,29 +47,31 @@
 
 ### Question
 
-| 列名        | 数据类型及精度 | 约束条件                                                     | 说明                             |
-| ----------- | -------------- | ------------------------------------------------------------ | -------------------------------- |
-| id          | int            | PRIMARY KEY, AUTO_INCREMENT                                  | 题目唯一标识                     |
-| titile      | text           | NOT NULL                                                     | 题目的标题                       |
-| type        | varchar(20)    | NOT NULL, CHECK(type in {"选择", "阅读", "完形"})            | 题目类型                         |
-| text        | text           | CHECK((type='选择' AND text IS NULL) OR text IS NOT NULL)    | 阅读、完形的文章，选择题此项为空 |
-| sub_que_num | int            | CHECK((type='选择' AND sub_que_num = 1) OR sub_que_num >=1 ) | 该题目所含小题数量               |
+| 列名             | 数据类型及精度 | 约束条件                                                     | 说明                             |
+| ---------------- | -------------- | ------------------------------------------------------------ | -------------------------------- |
+| id               | int            | PRIMARY KEY, AUTO_INCREMENT                                  | 题目唯一标识                     |
+| titile           | text           | NOT NULL                                                     | 题目的标题                       |
+| type             | varchar(20)    | NOT NULL, CHECK(type in {"选择", "阅读", "完形"})            | 题目类型                         |
+| text             | text           | CHECK((type='选择' AND text IS NULL) OR text IS NOT NULL)    | 阅读、完形的文章，选择题此项为空 |
+| sub_que_num      | int            | CHECK((type='选择' AND sub_que_num = 1) OR sub_que_num >=1 ) | 该题目所含小题数量               |
+| bad_solution_num | int            | NOT NULL，CHECK(>=0)                                         | 该题目包含的坏题解的数量         |
 
 
 
 ### SubQuestion
 
-| 列名   | 数据类型及精度 | 约束条件                                                     | 说明                   |
-| ------ | -------------- | ------------------------------------------------------------ | ---------------------- |
-| id     | int            | PRIMARY KEY, AUTO_INCREMENT                                  | 子问题id               |
-| que_id | int            | FOREIGN KEY(Question(id))                                    | 子问题所属的父问题的id |
-| number | int            | CHECK(number>=1 AND number <= Question(sub_que_num))         | 子问题的题号           |
-| stem   | text           | CHECK((Question(id)=father_id AND Question(type)='完形' AND stem IS NULL) OR stem IS NOT NULL) | 题干内容               |
-| A      | text           | NOT NULL                                                     | A选项内容              |
-| B      | text           | NOT NULL                                                     | B选项内容              |
-| C      | text           | NOT NULL                                                     | C选项内容              |
-| D      | text           | NOT NULL                                                     | D选项内容              |
-| answer | varchar(20)    | NOT NULL, CHECK(answer in {"A", "B", "C", "D"})              | 答案                   |
+| 列名             | 数据类型及精度 | 约束条件                                                     | 说明                   |
+| ---------------- | -------------- | ------------------------------------------------------------ | ---------------------- |
+| id               | int            | PRIMARY KEY, AUTO_INCREMENT                                  | 子问题id               |
+| que_id           | int            | FOREIGN KEY(Question(id))                                    | 子问题所属的父问题的id |
+| number           | int            | NOT NULL                                                     | 子问题的题号           |
+| stem             | text           | CHECK((Question(id)=father_id AND Question(type)='完形' AND stem IS NULL) OR stem IS NOT NULL) | 题干内容               |
+| A                | text           | NOT NULL                                                     | A选项内容              |
+| B                | text           | NOT NULL                                                     | B选项内容              |
+| C                | text           | NOT NULL                                                     | C选项内容              |
+| D                | text           | NOT NULL                                                     | D选项内容              |
+| answer           | varchar(20)    | NOT NULL, CHECK(answer in {"A", "B", "C", "D"})              | 答案                   |
+| bad_solution_num | int            | NOT NULL, CHECK(>=0，<=该小题的题解数)                       | 含有的坏题解的数量     |
 
 
 
@@ -79,6 +81,10 @@
 | -------- | -------------- | ----------------------- | ------------------ |
 | admin    | int            | FOREIGN KEY(AdminTable) | 认可该题解的管理员 |
 | solution | int            | FOREIGN KEY(Solution)   | 被认可的题解       |
+
+
+
+
 
 
 
@@ -94,6 +100,7 @@
 | likes    | int            | CHECK(>=0)                   | 该题解被点赞次数         |
 | reports  | int            | CHECK(>=0)                   | 该题解被举报次数         |
 | approval | int            | CHECK(>=0)                   | 该题解被管理员认可的次数 |
+| is_bad   | bool           | NOT NULL                     | 该题解是否是坏题解       |
 
 
 

@@ -406,11 +406,6 @@ def check_question(request):
 
     WXsubmit = WXUser.objects.get(id=user_id)
 
-    operate = 1  # need create
-    if done_question.objects.filter(openid=user_id, question_id=id).exists():
-        # return JsonResponse(3, "需要更新历史记录")
-        operate = 0  # need update
-
     i = 0
     for item in post:
         if type == CHOICE_QUE_NAME:
@@ -428,14 +423,10 @@ def check_question(request):
                 WXsubmit.right_reading += 1
             WXsubmit.total_reading += 1
 
-        if operate == 1:
-            done_question.objects.create(openid=user_id, question_id=id, sub_questionid=item['sub_id'],
-                                         option=item["submit"])
-        else:
-            obj = done_question.objects.get(openid=user_id, question_id=id, sub_questionid=item['sub_id'])
+        obj = done_question.objects.getorcreate(wxUser_id=user_id, subQuestion_id=item['sub_id'], option=item["submit"])
+        if obj.option != item["submit"]:
             obj.option = item["submit"]
             obj.save()
-
         i += 1
 
     WXsubmit.save()

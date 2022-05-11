@@ -113,9 +113,8 @@ class UserApproveSolution(models.Model):
 
 
 class done_question(models.Model):
-    openid = models.CharField(verbose_name='用户的openid', max_length=50)
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="对应的小题")
-    sub_questionid = models.IntegerField(verbose_name='对应小题目id')
+    wxUser = models.ForeignKey(WXUser, on_delete=models.CASCADE, verbose_name='用户的openid')
+    subQuestion = models.ForeignKey(SubQuestion, on_delete=models.CASCADE, verbose_name="对应的小题")
     option = models.CharField(verbose_name="用户选项", max_length=5,
                               choices=(('A', 'A'),
                                        ('B', 'B'),

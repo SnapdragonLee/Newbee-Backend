@@ -402,15 +402,15 @@ def check_question(request):
     ListOfQuestion.objects.create(openid=user_id, question_id=id)
     answers = SubQuestion.objects.filter(question_id=id).values('number', 'answer')
 
-    if answers is None:
+    if answers.exists() is False:
         return JsonResponse(data=wrap_response_data(3, "没有对应的小题答案"))
 
     WXsubmit = WXUser.objects.get(id=user_id)
 
-    operate = 0  # need update
-    if done_question.objects.filter(openid=user_id, question_id=id) is None:
-        return JsonResponse(3, "需要创建对应的历史记录")
-        operate = 1  # need create
+    operate = 1  # need update
+    if done_question.objects.filter(openid=user_id, question_id=id).exists():
+        return JsonResponse(3, "需要更新历史记录")
+        operate = 0  # need create
 
     i = 0
     for item in data:

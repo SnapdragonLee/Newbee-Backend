@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from utils.auth_decorators import user_logged
 from django.db import transaction
 from utils.defines import *
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.paginator import Paginator
 from administrator import models as admin_models
 
 
@@ -115,8 +115,8 @@ class SolutionViewClass(View):
         solution_list = admin_models.Solution.objects.filter(subQuestion__id=sub_que_id)
         serializer = ClientSolutionSerializer(solution_list, many=True, context={'openid': request.session['openid']})
         num = len(solution_list)
-        data = {"solution_num": num,
-                "solution": json.loads(json.dumps(serializer.data))}
+        data = {'solution_num': num,
+                'solution': json.loads(json.dumps(serializer.data))}
 
         return JsonResponse(data=wrap_response_data(0, **data))
 
@@ -266,7 +266,7 @@ def return_question(type, id, user_id, user, status):
             return return_info(this_question, this_question.id, flag)
 
 
-# @user_logged
+@user_logged
 def get_question(request):
     # 获取传递的参数和需要使用的数据
     question_type = request.GET['type']
@@ -318,7 +318,6 @@ class wrong_que_bookClass(View):
 
 
 class NoticeViewClass(View):
-    @method_decorator(user_logged)
     def get(self, request):
         if Notice.objects.count() >= 1:
             notice_obj = Notice.objects.all()[0]
@@ -389,19 +388,54 @@ def detail(request):
     return JsonResponse(data=wrap_response_data(0, **data))
 
 
-# @user_logged
+@user_logged
 def check_question(request):
     user_id = request.session['openid']
-    type = request.GET['type']
-    id = request.GET['id']
-    # 获取用户提交的答案
-    # answer=request.POST['answer']
-    data = {}
+
+    post_data = json.loads(request.body)
+    id = post_data['id']
+    type = post_data['type']
+    post = post_data['data']
+
     history.objects.create(openid=user_id, question_id=id)
     ListOfQuestion.objects.create(openid=user_id, question_id=id)
+    answers = SubQuestion.objects.filter(question_id=id).values('number', 'answer')
 
-    sub = SubQuestion.objects.filter(question_id=id).order_by('number')
+    if answers.exists() is False:
+        return JsonResponse(data=wrap_response_data(3, "没有对应的小题答案"))
+
+    WXsubmit = WXUser.objects.get(id=user_id)
+
+    i = 0
+    for item in post:
+        if type == CHOICE_QUE_NAME:
+            if item['submit'] == answers[i]["answer"]:
+                WXsubmit.right_choice += 1
+            WXsubmit.total_choice += 1
+
+        elif type == CLOZE_QUE_NAME:
+            if item['submit'] == answers[i]["answer"]:
+                WXsubmit.right_cloze += 1
+            WXsubmit.total_cloze += 1
+
+        else:
+            if item['submit'] == answers[i]["answer"]:
+                WXsubmit.right_reading += 1
+            WXsubmit.total_reading += 1
+
+        obj = done_question.objects.getorcreate(wxUser_id=user_id, subQuestion_id=item['sub_id'], option=item["submit"])
+        if obj.option != item["submit"]:
+            obj.option = item["submit"]
+            obj.save()
+        i += 1
+
+    WXsubmit.save()
+
+    sub = SubQuestion.objects.filter(question_id=id)
     serializer = AnswerSerializer(sub, many=True)
-    data['sub_que'] = json.loads(json.dumps(serializer.data))
-    return JsonResponse(data=wrap_response_data(0, **data))
 
+    data = {
+        'sub_que': json.loads(json.dumps(serializer.data))
+    }
+
+    return JsonResponse(data=wrap_response_data(0, **data))

@@ -318,7 +318,6 @@ class wrong_que_bookClass(View):
 
 
 class NoticeViewClass(View):
-    @method_decorator(user_logged)
     def get(self, request):
         if Notice.objects.count() >= 1:
             notice_obj = Notice.objects.all()[0]
@@ -396,7 +395,7 @@ def check_question(request):
     post_data = json.loads(request.body)
     id = post_data['id']
     type = post_data['type']
-    data = post_data['data']
+    post = post_data['data']
 
     history.objects.create(openid=user_id, question_id=id)
     ListOfQuestion.objects.create(openid=user_id, question_id=id)
@@ -407,13 +406,13 @@ def check_question(request):
 
     WXsubmit = WXUser.objects.get(id=user_id)
 
-    operate = 1  # need update
+    operate = 1  # need create
     if done_question.objects.filter(openid=user_id, question_id=id).exists():
-        return JsonResponse(3, "需要更新历史记录")
-        operate = 0  # need create
+        # return JsonResponse(3, "需要更新历史记录")
+        operate = 0  # need update
 
     i = 0
-    for item in data:
+    for item in post:
         if type == CHOICE_QUE_NAME:
             if item['submit'] == answers[i]["answer"]:
                 WXsubmit.right_choice += 1
@@ -443,5 +442,9 @@ def check_question(request):
 
     sub = SubQuestion.objects.filter(question_id=id)
     serializer = AnswerSerializer(sub, many=True)
-    data['sub_que'] = json.loads(json.dumps(serializer.data))
+
+    data = {
+        'sub_que': json.loads(json.dumps(serializer.data))
+    }
+
     return JsonResponse(data=wrap_response_data(0, **data))

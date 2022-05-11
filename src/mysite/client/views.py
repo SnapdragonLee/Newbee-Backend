@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from utils.auth_decorators import user_logged
 from django.db import transaction
 from utils.defines import *
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.paginator import Paginator
 from administrator import models as admin_models
 
 

@@ -7,6 +7,10 @@ from django.db.models import Q, F
 from utils.defines import *
 from django.contrib.auth.models import User
 import datetime
+import django.dispatch
+from django.dispatch import receiver
+
+modify_bad_solution_signal = django.dispatch.Signal()
 
 
 # Create your models here.
@@ -24,12 +28,11 @@ class Question(models.Model):
 
     text = models.TextField(verbose_name='文章', null=True, blank=True)
     sub_que_num = models.IntegerField(verbose_name='子问题数量', null=False)
-    bad_sub_que_num = models.IntegerField(verbose_name='该题目包含的含有坏题解的子题目的数量', default=0)
+    bad_solution_num = models.IntegerField(verbose_name='该题目含有坏题解的数量', default=0)
 
     class Meta:
         constraints = [
-            models.CheckConstraint(check=Q(bad_sub_que_num__gte=0) & Q(bad_sub_que_num__lte=F('sub_que_num')),
-                                   name='check_bad_sub_que_num')
+            models.CheckConstraint(check=Q(bad_solution_num__gte=0), name='check_Question_bad_solution_num')
         ]
 
     def __str__(self):
@@ -54,16 +57,20 @@ class Question(models.Model):
         except ValidationError as e:
             raise e
 
-    def add_bad_sub_que(self):
-        self.bad_sub_que_num += 1
-        self.save()
+    # def add_bad_solution(self):
+    #     self.bad_solution_num += 1
+    #     self.save()
+    #
+    # def reduce_bad_solution(self):
+    #     self.bad_solution_num -= 1
+    #     self.save()
 
-    def reduce_bad_sub_que(self):
-        self.bad_sub_que_num -= 1
-        self.save()
+    def has_bad_solution(self, admin):
+        sub_que_id_list = SubQuestion.objects.filter(question=self).values_list('id', flat=True)
+        count = AdminApproveSolution.objects.filter(admin=admin, solution__is_bad=True,
+                                                    solution__subQuestion_id__in=sub_que_id_list).count()
 
-    def has_bad_solution(self):
-        return True if self.bad_sub_que_num > 0 else False
+        return False if self.bad_solution_num == count else True
 
 
 # django默认字段参数中的null和blank都是false，所以以下写法很冗余
@@ -86,7 +93,7 @@ class SubQuestion(models.Model):
 
     class Meta:
         constraints = [
-            models.CheckConstraint(check=Q(bad_solution_num__gte=0), name='check_bad_solution_num')
+            models.CheckConstraint(check=Q(bad_solution_num__gte=0), name='check_SubQuestion_bad_solution_num')
         ]
 
     def __str__(self):
@@ -98,20 +105,21 @@ class SubQuestion(models.Model):
                 (self.question.type != CLOZE_QUE_NAME and self.stem is not None)):
             raise ValidationError
 
-        if not (1 <= self.number <= self.question.sub_que_num):
-            raise ValidationError
+        # if self.bad_solution_num > Solution.objects.filter(subQuestion=self).count():
+        #     raise ValidationError
 
-    def reduce_bad_solution(self):
-        self.bad_solution_num -= 1
-        if self.bad_solution_num == 0:
-            self.question.reduce_bad_sub_que()
-        self.save()
+        # if not (1 <= self.number <= self.question.sub_que_num):
+        #     raise ValidationError
 
-    def add_bad_solution(self):
-        self.bad_solution_num += 1
-        if self.bad_solution_num == 1:
-            self.question.add_bad_sub_que()
-        self.save()
+    # def reduce_bad_solution(self):
+    #     self.bad_solution_num -= 1
+    #     self.save()
+    #     self.question.reduce_bad_solution()
+    #
+    # def add_bad_solution(self):
+    #     self.bad_solution_num += 1
+    #     self.save()
+    #     self.question.add_bad_solution()
 
     def save(self, *args, **kwargs):
         try:
@@ -124,8 +132,11 @@ class SubQuestion(models.Model):
         except ValidationError as e:
             raise e
 
-    def has_bad_solution(self):
-        return True if self.bad_solution_num > 0 else False
+    def has_bad_solution(self, admin):
+        count = AdminApproveSolution.objects.filter(admin=admin, solution__is_bad=True,
+                                                    solution__subQuestion=self).count()
+
+        return False if count == self.bad_solution_num else True
 
 
 class Solution(models.Model):
@@ -135,6 +146,7 @@ class Solution(models.Model):
     likes = models.IntegerField(verbose_name='点赞数', default=0)
     reports = models.IntegerField(verbose_name='举报数', default=0)
     approval = models.IntegerField(verbose_name='被管理员认可的次数', default=0)
+    is_bad = models.BooleanField(verbose_name='是否是坏题解', default=False)
 
     def __str__(self):
         return str(self.content)[0:20]
@@ -148,42 +160,74 @@ class Solution(models.Model):
 
     def is_bad_solution(self):
         # self.refresh_from_db()
+        return self.is_bad
+
+    def set_bad_solution(self):
         if self.reports > 10 and ((self.reports - self.approval * 5) > self.likes * 2):
-            return True
+            self.is_bad = True
         else:
-            return False
+            self.is_bad = False
+
+    def update_bad_solution(self):
+        before = self.is_bad_solution()
+        self.set_bad_solution()
+        after = self.is_bad_solution()
+        self.save()
+        return before, after
+
+    def positive_evaluation(self):
+        before, after = self.update_bad_solution()
+        if before and not after:
+            modify_bad_solution_signal.send(sender=self.__class__, solution=self, cnt=-1)
+            # self.subQuestion.reduce_bad_solution()
+
+    def negative_evaluation(self):
+        before, after = self.update_bad_solution()
+        if not before and after:
+            modify_bad_solution_signal.send(sender=self.__class__, solution=self, cnt=1)
+            # self.subQuestion.add_bad_solution()
 
     def add_like(self):
-        before = self.is_bad_solution()
         self.likes += 1
-        after = self.is_bad_solution()
-        if before and not after:
-            self.subQuestion.reduce_bad_solution()
-        self.save()
+        self.positive_evaluation()
 
     def add_report(self):
-        before = self.is_bad_solution()
         self.reports += 1
-        after = self.is_bad_solution()
-        if not before and after:
-            self.subQuestion.add_bad_solution()
-        self.save()
+        self.negative_evaluation()
 
     def add_approval(self):
-        before = self.is_bad_solution()
         self.approval += 1
+        self.positive_evaluation()
+
+    def debug(self):
+        before = self.is_bad_solution()
+        self.set_bad_solution()
         after = self.is_bad_solution()
         if before and not after:
-            self.subQuestion.reduce_bad_solution()
-        self.save()
+            modify_bad_solution_signal.send(sender=self.__class__, solution=self, cnt=-1)
+        elif not before and after:
+            modify_bad_solution_signal.send(sender=self.__class__, solution=self, cnt=1)
 
     def save(self, *args, **kwargs):
         try:
+            # self.debug()
+             #如果用django管理器加举报数，则不要注释此行，正式版请把此行注释
+
             self.full_clean()
             super().save(*args, **kwargs)
 
         except ValidationError as e:
             raise e
+
+
+@receiver(modify_bad_solution_signal)
+def modify_bad_solution_handler(sender, solution: Solution, cnt: int, **kwargs):
+    sub_que_obj = solution.subQuestion
+    sub_que_obj.bad_solution_num += cnt
+    sub_que_obj.save()
+    que_obj = sub_que_obj.question
+    que_obj.bad_solution_num += cnt
+    que_obj.save()
 
 
 class Notice(models.Model):

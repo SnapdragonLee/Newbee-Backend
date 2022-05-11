@@ -408,7 +408,7 @@ def check_question(request):
     WXsubmit = WXUser.objects.get(id=user_id)
 
     operate = 0  # need update
-    if done_question.objects.fileter(openid=user_id, question_id=id) is None:
+    if done_question.objects.filter(openid=user_id, question_id=id) is None:
         operate = 1  # need create
 
     i = 0

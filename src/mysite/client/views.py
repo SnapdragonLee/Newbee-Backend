@@ -402,6 +402,9 @@ def check_question(request):
     ListOfQuestion.objects.create(openid=user_id, question_id=id)
     answers = SubQuestion.objects.filter(question_id=id).values('number', 'answer')
 
+    if answers is None:
+        return JsonResponse(data=wrap_response_data(3, "没有对应的小题答案"))
+
     WXsubmit = WXUser.objects.get(id=user_id)
 
     operate = 0  # need update
@@ -410,32 +413,29 @@ def check_question(request):
 
     i = 0
     for item in data:
-        if item['sub_id'] == answers[i]['number']:
-            if type == CHOICE_QUE_NAME:
-                if item['submit'] == answers[i]["answer"]:
-                    WXsubmit.right_choice += 1
-                WXsubmit.total_choice += 1
+        if type == CHOICE_QUE_NAME:
+            if item['submit'] == answers[i]["answer"]:
+                WXsubmit.right_choice += 1
+            WXsubmit.total_choice += 1
 
-            elif type == CLOZE_QUE_NAME:
-                if item['submit'] == answers[i]["answer"]:
-                    WXsubmit.right_cloze += 1
-                WXsubmit.total_cloze += 1
-
-            else:
-                if item['submit'] == answers[i]["answer"]:
-                    WXsubmit.right_reading += 1
-                WXsubmit.total_reading += 1
-
-            if operate == 1:
-                done_question.objects.create(openid=user_id, question_id=id, sub_questionid=item['sub_id'],
-                                             option=item["submit"])
-            else:
-                obj = done_question.objects.get(openid=user_id, question_id=id, sub_questionid=item['sub_id'])
-                obj.option = item["submit"]
-                obj.save()
+        elif type == CLOZE_QUE_NAME:
+            if item['submit'] == answers[i]["answer"]:
+                WXsubmit.right_cloze += 1
+            WXsubmit.total_cloze += 1
 
         else:
-            return JsonResponse(data=wrap_response_data(3, "没有对应的小题"))
+            if item['submit'] == answers[i]["answer"]:
+                WXsubmit.right_reading += 1
+            WXsubmit.total_reading += 1
+
+        if operate == 1:
+            done_question.objects.create(openid=user_id, question_id=id, sub_questionid=item['sub_id'],
+                                         option=item["submit"])
+        else:
+            obj = done_question.objects.get(openid=user_id, question_id=id, sub_questionid=item['sub_id'])
+            obj.option = item["submit"]
+            obj.save()
+
         i += 1
 
     WXsubmit.save()

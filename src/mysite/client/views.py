@@ -409,6 +409,7 @@ def check_question(request):
 
     operate = 0  # need update
     if done_question.objects.filter(openid=user_id, question_id=id) is None:
+        return JsonResponse(3, "需要创建对应的历史记录")
         operate = 1  # need create
 
     i = 0

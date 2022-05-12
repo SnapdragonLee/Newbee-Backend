@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-with open('./settings.json') as f:
+with open(BASE_DIR / 'settings.json') as f:
     setting = json.load(f)
     SECRET_KEY = setting['api_key']
     APPID = setting['appid']

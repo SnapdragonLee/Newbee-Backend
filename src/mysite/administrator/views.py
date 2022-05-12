@@ -68,8 +68,8 @@ class ListUser(View):
     def get(self, request):
         page_number = request.GET['pagenumber']
         page_size = request.GET['pagesize']
-        sort_type = request.GET['sorttype']
-        sort_name = request.GET['sortname']
+        sort_type = request.GET.get('sorttype')
+        sort_name = request.GET.get('sortname')
 
         name_map = {
             'numc': 'total_cloze',
@@ -77,9 +77,12 @@ class ListUser(View):
             'numr': 'total_reading'
         }
 
-        order_method_str = name_map[sort_name]
-        if int(sort_type) == 0:
-            order_method_str = '-' + order_method_str
+        if sort_name is None or sort_type is None:
+            order_method_str = 'user_name'
+        else:
+            order_method_str = name_map[sort_name]
+            if int(sort_type) == 0:
+                order_method_str = '-' + order_method_str
 
         query_set = client_models.WXUser.objects.all().order_by(order_method_str)
 

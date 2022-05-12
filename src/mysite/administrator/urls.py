@@ -12,5 +12,6 @@ urlpatterns = [
     path('solution', views.ListSolution.as_view(), name='admin_solution'),
     path('has_bad_solution', views.has_bad_solution, name='admin_has_bad_solution'),
     path('notice', views.NoticeViewClass.as_view(), name='admin_notice'),
-    path('op_record', views.get_operation_record, name='admin_op_record')
+    path('op_record', views.get_operation_record, name='admin_op_record'),
+    path('graph', views.get_graph_data, name='admin_get_graph_data'),
 ]

@@ -3,6 +3,8 @@ from .models import Question, SubQuestion, Solution, OperationRecord, AdminAppro
 from rest_framework.serializers import SerializerMethodField
 from django.db.models import Q, F
 from django.contrib.auth.models import User
+from client.models import WXUser
+from utils.defines import *
 
 
 class ListQuestionSerializer(serializers.ModelSerializer):
@@ -71,3 +73,22 @@ class OperationRecordSerializer(serializers.ModelSerializer):
 
     def get_op_type(self, obj: OperationRecord):
         return obj.operation
+
+
+class GraphDataSerializer(serializers.ModelSerializer):
+    value = SerializerMethodField()
+    code = serializers.CharField(source='user_name')
+
+    type_map = {
+        CHOICE_QUE_NAME: 'total_choice',
+        CLOZE_QUE_NAME: 'total_cloze',
+        READING_QUE_NAME: "total_reading",
+    }
+
+    class Meta:
+        model = WXUser
+        fields = ['value', 'code']
+
+    def get_value(self, wxuser_obj: WXUser):
+        attr_name = GraphDataSerializer.type_map[self.context['type']]
+        return wxuser_obj.__getattribute__(attr_name)

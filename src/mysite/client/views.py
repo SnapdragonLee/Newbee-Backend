@@ -18,11 +18,12 @@ from administrator import models as admin_models
 
 
 # Create your views here.
+from mysite.settings import APPID, SECRET
 
 
 def user_login(request):
-    appid = 'wx9cb76a70a7aba68a'
-    secret = 'a79c0044ff02e5368cf3bc96704f7d76'
+    appid = APPID
+    secret = SECRET
 
     try:
         post_data = json.loads(request.body)

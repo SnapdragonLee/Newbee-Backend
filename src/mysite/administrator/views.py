@@ -16,6 +16,8 @@ import datetime
 from django.contrib.auth.models import User
 from administrator.models import OperationRecord
 from django.db.models import Q, F
+from enum import Enum
+from utils.defines import *
 
 
 def add_operation(op_type: OperationRecord.OP_TYPE,
@@ -66,7 +68,21 @@ class ListUser(View):
     def get(self, request):
         page_number = request.GET['pagenumber']
         page_size = request.GET['pagesize']
-        query_set = client_models.WXUser.objects.all().order_by("user_name")
+        sort_type = request.GET['sorttype']
+        sort_name = request.GET['sortname']
+
+        name_map = {
+            'numc': 'total_cloze',
+            'numm': 'total_choice',
+            'numr': 'total_reading'
+        }
+
+        order_method_str = name_map[sort_name]
+        if int(sort_type) == 0:
+            order_method_str = '-' + order_method_str
+
+        query_set = client_models.WXUser.objects.all().order_by(order_method_str)
+
         data = get_user_list(page_number, page_size, query_set)
         return JsonResponse(data=wrap_response_data(0, **data))
 

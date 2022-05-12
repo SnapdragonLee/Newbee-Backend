@@ -440,3 +440,20 @@ def check_question(request):
     }
 
     return JsonResponse(data=wrap_response_data(0, **data))
+
+
+@user_logged
+def statistics(request):
+    user_id = request.session['openid']
+    WXsubmit = WXUser.objects.get(id=user_id)
+
+    data = {
+        'choice_num': WXsubmit.total_choice,
+        'choice_right': WXsubmit.right_choice,
+        'cloze_num': WXsubmit.total_cloze,
+        'cloze_right': WXsubmit.right_cloze,
+        'reading_num': WXsubmit.total_reading,
+        'reading_right': WXsubmit.right_reading,
+    }
+
+    return JsonResponse(data=wrap_response_data(0, **data))

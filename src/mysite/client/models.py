@@ -122,7 +122,7 @@ class done_question(models.Model):
                                        ('D', 'D')), default='A')
 
     def __str__(self):
-        return self.openid
+        return self.wxUser.id
 
     def save(self, *args, **kwargs):
         try:

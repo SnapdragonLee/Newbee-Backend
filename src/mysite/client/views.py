@@ -18,11 +18,12 @@ from administrator import models as admin_models
 
 
 # Create your views here.
+from mysite.settings import APPID, SECRET
 
 
 def user_login(request):
-    appid = 'wx9cb76a70a7aba68a'
-    secret = 'a79c0044ff02e5368cf3bc96704f7d76'
+    appid = APPID
+    secret = SECRET
 
     try:
         post_data = json.loads(request.body)
@@ -381,7 +382,7 @@ def detail(request):
         return JsonResponse(data=wrap_response_data(3, "查询不到该题目，可能被管理员删除了.,."))
     serializer = client_DesignatedQuestionSerializer(question)
     data = json.loads(json.dumps(serializer.data))
-    done_question_detail = done_question.objects.filter(openid=user_id, question_id=id).order_by('sub_questionid')
+    done_question_detail = done_question.objects.filter(wxUser_id=user_id, subQuestion_id=id).order_by('sub_questionid')
     serializer = client_ListDoneQuestionSerializer(done_question_detail, many=True)
     done_question_detail_list = json.loads(json.dumps(serializer.data))
     data['sub_que'] = done_question_detail_list
@@ -423,10 +424,10 @@ def check_question(request):
                 WXsubmit.right_reading += 1
             WXsubmit.total_reading += 1
 
-        obj = done_question.objects.getorcreate(wxUser_id=user_id, subQuestion_id=item['sub_id'], option=item["submit"])
-        if obj.option != item["submit"]:
-            obj.option = item["submit"]
-            obj.save()
+        obj = done_question.objects.get_or_create(wxUser_id=user_id, subQuestion_id=item['sub_id'], option=item["submit"])
+        if not obj[1]:
+            obj[0].option = item["submit"]
+            obj[0].save()
         i += 1
 
     WXsubmit.save()
@@ -436,6 +437,23 @@ def check_question(request):
 
     data = {
         'sub_que': json.loads(json.dumps(serializer.data))
+    }
+
+    return JsonResponse(data=wrap_response_data(0, **data))
+
+
+@user_logged
+def statistics(request):
+    user_id = request.session['openid']
+    WXsubmit = WXUser.objects.get(id=user_id)
+
+    data = {
+        'choice_num': WXsubmit.total_choice,
+        'choice_right': WXsubmit.right_choice,
+        'cloze_num': WXsubmit.total_cloze,
+        'cloze_right': WXsubmit.right_cloze,
+        'reading_num': WXsubmit.total_reading,
+        'reading_right': WXsubmit.right_reading,
     }
 
     return JsonResponse(data=wrap_response_data(0, **data))

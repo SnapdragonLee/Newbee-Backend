@@ -1,12 +1,16 @@
-##  Newbee English
+##  Newbee Backend
 
 
 
-### Backend 小组仓库
+### Description
 
-本小组仓库：[SnapdragonLee/Newbee-backend (github.com)](https://github.com/SnapdragonLee/Newbee-backend)
+各个小组代码仓库：
 
-主仓库: [SnapdragonLee/Newbee-English (github.com)](https://github.com/SnapdragonLee/Newbee-English)
+| 小组                | 仓库地址                                                     |
+| ------------------- | ------------------------------------------------------------ |
+| Backend             | [SnapdragonLee/Newbee-backend (github.com)](https://github.com/SnapdragonLee/Newbee-backend) |
+| Frontend            | [zrjzrj0403/Newbee-Frontend (github.com)](https://github.com/zrjzrj0403/Newbee-Frontend) |
+| Weixin Mini Program | [杨佳豪/miniprogram_Newbee English (gitee.com)](https://gitee.com/edwardyangjh/newbee-english) |
 
 
 
@@ -50,11 +54,11 @@ python manage.py runserver 8000
 
 
 
-**千万不要擅自改动 `backend/src/mysite/mysite/settings.py` 中的配置！不要问我为什么！**
+**千万不要擅自改动 `backend/src/mysite/mysite/settings.py` 中的配置！改之前最好问下后端的各个组员，或者让他们内部商量一下。**
 
-**千万不要擅自改动 `backend/src/mysite/mysite/settings.py` 中的配置！不要问我为什么！**
 
-你也可以根据自己的 OS 和环境，通过使用主仓库中的 `autoLayout.sh`，`autoLayout.bat`，`autoLayout.ps1` 全自动准备联调环境。
+
+*你也可以根据自己的 OS 和环境，通过使用主仓库中的 `autoLayout.sh`，`autoLayout.bat`，`autoLayout.ps1` 全自动准备联调环境。*
 
 
 

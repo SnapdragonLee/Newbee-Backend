@@ -79,16 +79,9 @@ class GraphDataSerializer(serializers.ModelSerializer):
     value = SerializerMethodField()
     code = serializers.CharField(source='user_name')
 
-    type_map = {
-        CHOICE_QUE_NAME: 'total_choice',
-        CLOZE_QUE_NAME: 'total_cloze',
-        READING_QUE_NAME: "total_reading",
-    }
-
     class Meta:
         model = WXUser
         fields = ['value', 'code']
 
     def get_value(self, wxuser_obj: WXUser):
-        attr_name = GraphDataSerializer.type_map[self.context['type']]
-        return wxuser_obj.__getattribute__(attr_name)
+        return wxuser_obj.__getattribute__(self.context['field_name'])

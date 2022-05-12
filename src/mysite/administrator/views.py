@@ -427,6 +427,12 @@ def get_operation_record(request):
     return JsonResponse(data=wrap_response_data(0, **data))
 
 
+def serialize_top_users(field_name: str):
+    top_users = client_models.WXUser.objects.all().order_by(field_name)[0:5]
+    serializer = GraphDataSerializer(top_users, many=True, context={'field_name': field_name})
+    return json.loads(json.dumps(serializer.data))
+
+
 def get_graph_data(request):
     user_sum = client_models.WXUser.objects.all().count()
     choice_sum = admin_models.Question.objects.filter(type=CHOICE_QUE_NAME).count()
@@ -438,36 +444,22 @@ def get_graph_data(request):
                                                                                  solution__is_bad=True).count()
     unapproved_bad_solution_sum = bad_solution_sum - approved_bad_solution_sum
 
-    data = {
-        "usernumber": user_sum,
-        "questionnumber": question_sum,
-        "bad_solution_number": unapproved_bad_solution_sum,
-        "questions_number": [
-            {
-                'value': choice_sum,
-                'name': '单项选择'
-            },
-            {
-                'value': cloze_sum,
-                'name': '完形填空'
-            },
-            {
-                'value': reading_sum,
-                'name': '阅读理解'
-            }
-        ]
-    }
-
-    choice_que_top_users = client_models.WXUser.objects.all().order_by('total_choice')[0:5]
-    serializer = GraphDataSerializer(choice_que_top_users, many=True, context={'type': CHOICE_QUE_NAME})
-    data['choice_question_top5'] = json.loads(json.dumps(serializer.data))
-
-    cloze_que_top_users = client_models.WXUser.objects.all().order_by('total_cloze')[0:5]
-    serializer = GraphDataSerializer(cloze_que_top_users, many=True, context={'type': CLOZE_QUE_NAME})
-    data['cloze_question_top5'] = json.loads(json.dumps(serializer.data))
-
-    reading_que_top_users = client_models.WXUser.objects.all().order_by('total_reading')[0:5]
-    serializer = GraphDataSerializer(reading_que_top_users, many=True, context={'type': READING_QUE_NAME})
-    data['reading_question_top5'] = json.loads(json.dumps(serializer.data))
+    data = {"usernumber": user_sum, "questionnumber": question_sum, "bad_solution_number": unapproved_bad_solution_sum,
+            "questions_number": [
+                {
+                    'value': choice_sum,
+                    'name': '单项选择'
+                },
+                {
+                    'value': cloze_sum,
+                    'name': '完形填空'
+                },
+                {
+                    'value': reading_sum,
+                    'name': '阅读理解'
+                }
+            ], 'choice_question_top5': serialize_top_users('total_choice'),
+            'cloze_question_top5': serialize_top_users('total_cloze'),
+            'reading_question_top5': serialize_top_users('total_reading')}
 
     return JsonResponse(data=wrap_response_data(0, **data))

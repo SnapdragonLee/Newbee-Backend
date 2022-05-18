@@ -16,7 +16,6 @@ from utils.defines import *
 from django.core.paginator import Paginator
 from administrator import models as admin_models
 
-
 # Create your views here.
 from mysite.settings import APPID, SECRET
 
@@ -31,7 +30,7 @@ def user_login(request):
         wx_username = post_data['username']
     except Exception as e:
         print(e.args)
-        return JsonResponse(data=wrap_response_data(3, "json格式错误"))
+        return JsonResponse(data=wrap_response_data(3, 'json格式错误'))
 
     url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid \
           + '&secret=' + secret + '&js_code=' + code + '&grant_type=authorization_code'
@@ -39,7 +38,7 @@ def user_login(request):
     response = json.loads(requests.get(url).content)
 
     if 'errcode' in response:
-        return JsonResponse(data=wrap_response_data(3, "获取openid失败"))
+        return JsonResponse(data=wrap_response_data(3, '获取openid失败'))
 
     openid = response['openid']
     session_key = response['session_key']
@@ -52,7 +51,7 @@ def user_login(request):
                 new_user.save()
     except Exception as e:
         print(e.args)
-        return JsonResponse(data=wrap_response_data(3, "数据库操作失败"))
+        return JsonResponse(data=wrap_response_data(3, '数据库操作失败'))
 
     request.session['openid'] = openid
     return JsonResponse(data=wrap_response_data(0))
@@ -77,7 +76,7 @@ class UserProfile(View):
                 data['username'] = user.user_name
         except Exception as e:
             print(e.args)
-            return JsonResponse(data=wrap_response_data(3, "不存在为该openid的用户"))
+            return JsonResponse(data=wrap_response_data(3, '不存在为该openid的用户'))
 
         return JsonResponse(data=wrap_response_data(0, **data))
 
@@ -90,7 +89,7 @@ class UserProfile(View):
             new_username = post_data['username']
         except Exception as e:
             print(e.args)
-            return JsonResponse(data=wrap_response_data(3, "json格式错误"))
+            return JsonResponse(data=wrap_response_data(3, 'json格式错误'))
 
         try:
             with transaction.atomic():
@@ -99,7 +98,7 @@ class UserProfile(View):
                 user.save()
         except Exception as e:
             print(e.args)
-            return JsonResponse(data=wrap_response_data(3, "不存在为该openid的用户"))
+            return JsonResponse(data=wrap_response_data(3, '不存在为该openid的用户'))
 
         return JsonResponse(data=wrap_response_data(0))
 
@@ -111,7 +110,7 @@ class SolutionViewClass(View):
             sub_que_id = request.GET['id']
         except Exception as e:
             print(e.args)
-            return JsonResponse(data=wrap_response_data(3, "json参数格式错误"))
+            return JsonResponse(data=wrap_response_data(3, 'json参数格式错误'))
 
         solution_list = admin_models.Solution.objects.filter(subQuestion__id=sub_que_id)
         serializer = ClientSolutionSerializer(solution_list, many=True, context={'openid': request.session['openid']})
@@ -129,13 +128,13 @@ class SolutionViewClass(View):
             content = post_data['solution']
         except Exception as e:
             print(e.args)
-            return JsonResponse(data=wrap_response_data(3, "json参数格式错误"))
+            return JsonResponse(data=wrap_response_data(3, 'json参数格式错误'))
 
         try:
             sub_que_obj = admin_models.SubQuestion.objects.get(id__exact=sub_que_id)
         except Exception as e:
             print(e.args)
-            return JsonResponse(data=wrap_response_data(3, "不存在为该id的子题目"))
+            return JsonResponse(data=wrap_response_data(3, '不存在为该id的子题目'))
 
         admin_models.Solution.objects.create(subQuestion=sub_que_obj, content=content)
         return JsonResponse(data=wrap_response_data(0))
@@ -313,7 +312,7 @@ class wrong_que_bookClass(View):
         try:
             wrong_question = WrongQuestions.objects.get(openid=user_id, question_id=id)
         except:
-            return JsonResponse(data=wrap_response_data(3, "错题本查询不到对应题目"))
+            return JsonResponse(data=wrap_response_data(3, '错题本查询不到对应题目'))
         wrong_question.delete()
         return JsonResponse(data=wrap_response_data(0))
 
@@ -379,7 +378,7 @@ def detail(request):
     try:
         question = Question.objects.get(id=id)
     except:
-        return JsonResponse(data=wrap_response_data(3, "查询不到该题目，可能被管理员删除了.,."))
+        return JsonResponse(data=wrap_response_data(3, '查询不到该题目，可能被管理员删除了.,.'))
     serializer = client_DesignatedQuestionSerializer(question)
     data = json.loads(json.dumps(serializer.data))
     done_question_detail = done_question.objects.filter(wxUser_id=user_id, subQuestion_id=id).order_by('sub_questionid')
@@ -403,31 +402,34 @@ def check_question(request):
     answers = SubQuestion.objects.filter(question_id=id).values('number', 'answer')
 
     if answers.exists() is False:
-        return JsonResponse(data=wrap_response_data(3, "没有对应的小题答案"))
+        return JsonResponse(data=wrap_response_data(3, '没有对应的小题答案'))
 
     WXsubmit = WXUser.objects.get(id=user_id)
 
     i = 0
     for item in post:
         if type == CHOICE_QUE_NAME:
-            if item['submit'] == answers[i]["answer"]:
+            if item['submit'] == answers[i]['answer']:
                 WXsubmit.right_choice += 1
             WXsubmit.total_choice += 1
 
         elif type == CLOZE_QUE_NAME:
-            if item['submit'] == answers[i]["answer"]:
+            if item['submit'] == answers[i]['answer']:
                 WXsubmit.right_cloze += 1
             WXsubmit.total_cloze += 1
 
         else:
-            if item['submit'] == answers[i]["answer"]:
+            if item['submit'] == answers[i]['answer']:
                 WXsubmit.right_reading += 1
             WXsubmit.total_reading += 1
 
-        obj = done_question.objects.get_or_create(wxUser_id=user_id, subQuestion_id=item['sub_id'], option=item["submit"])
-        if not obj[1]:
-            obj[0].option = item["submit"]
-            obj[0].save()
+        try:
+            obj = done_question.objects.get(wxUser_id=user_id, subQuestion_id=item['sub_id'])
+            obj['option'] = item['submit']
+            obj.save()
+        except:
+            done_question.objects.create(wxUser_id=user_id, subQuestion_id=item['sub_id'], option=item['submit'])
+
         i += 1
 
     WXsubmit.save()

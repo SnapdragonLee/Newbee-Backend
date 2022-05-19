@@ -302,6 +302,9 @@ class wrong_que_bookClass(View):
     def post(self, request):
         user_id = request.session['openid']
         id = request.GET['id']
+        if WrongQuestions.objects.filter(openid=user_id, question_id=id).exists():
+            return JsonResponse(data=wrap_response_data(3, '错题本中已经有这个题目了'))
+
         WrongQuestions.objects.create(openid=user_id, question_id=id)
         return JsonResponse(data=wrap_response_data(0))
 
@@ -425,7 +428,7 @@ def check_question(request):
 
         try:
             obj = done_question.objects.get(wxUser_id=user_id, subQuestion_id=item['sub_id'])
-            obj['option'] = item['submit']
+            obj.option = item['submit']
             obj.save()
         except:
             done_question.objects.create(wxUser_id=user_id, subQuestion_id=item['sub_id'], option=item['submit'])

@@ -21,6 +21,8 @@ class WXUser(models.Model):
     total_reading = models.IntegerField(verbose_name='做过的阅读题小题总数', default=0, null=False)
     right_reading = models.IntegerField(verbose_name='做对的阅读题小题数', default=0, null=False)
     status = models.IntegerField(verbose_name="刷题阶段", default=0, null=False)
+    likes = models.IntegerField(verbose_name='该用户发表的题解被点赞的总数', default=0)
+    reports = models.IntegerField(verbose_name='该用户发表的题解被举报的总数', default=0)
 
     def __str__(self):
         return self.id
@@ -31,6 +33,14 @@ class WXUser(models.Model):
             super().save(*args, **kwargs)
         except ValidationError as e:
             raise e
+
+    def modify_likes(self, variance: int):
+        self.likes += variance
+        self.save()
+
+    def modify_reports(self, variance: int):
+        self.reports += variance
+        self.save()
 
     class Meta:
         constraints = [

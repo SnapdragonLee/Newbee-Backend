@@ -65,10 +65,15 @@ class client_ListQuestionSerializer(serializers.ModelSerializer):
 
 class ClientSolutionSerializer(serializers.ModelSerializer):
     approved = SerializerMethodField()
+    author_username = SerializerMethodField()
+    author_solution_sum = SerializerMethodField()
+    author_likes = SerializerMethodField()
+    author_reports = SerializerMethodField()
 
     class Meta:
         model = Solution
-        fields = ['id', 'content', 'likes', 'reports', 'approved']
+        fields = ['id', 'content', 'likes', 'reports', 'approved', 'author_username', 'author_solution_sum',
+                  'author_likes', 'author_reports']
 
     def get_approved(self, obj: Solution):
         openid = self.context['openid']
@@ -78,6 +83,18 @@ class ClientSolutionSerializer(serializers.ModelSerializer):
             return 0
         else:
             return query_set[0].type
+
+    def get_author_username(self, solution_obj: Solution):
+        return solution_obj.wxUser.user_name
+
+    def get_author_solution_sum(self, solution_obj: Solution):
+        return Solution.objects.filter(wxUser=solution_obj.wxUser).count()
+
+    def get_author_likes(self, solution_obj: Solution):
+        return solution_obj.wxUser.likes
+
+    def get_author_reports(self, solution_obj: Solution):
+        return solution_obj.wxUser.reports
 
 
 class SubQuestionSer(serializers.ModelSerializer):

@@ -136,7 +136,10 @@ class SolutionViewClass(View):
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, '不存在为该id的子题目'))
 
-        admin_models.Solution.objects.create(subQuestion=sub_que_obj, content=content)
+        wx_user = WXUser.objects.get(id__exact=request.session['openid'])
+        admin_models.Solution.objects.create(subQuestion=sub_que_obj, wxUser=wx_user,
+                                             content=content)
+
         return JsonResponse(data=wrap_response_data(0))
 
 

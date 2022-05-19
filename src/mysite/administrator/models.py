@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 import datetime
 import django.dispatch
 from django.dispatch import receiver
+from client.models import WXUser
 
 modify_bad_solution_signal = django.dispatch.Signal()
 
@@ -141,7 +142,8 @@ class SubQuestion(models.Model):
 
 class Solution(models.Model):
     id = models.AutoField(verbose_name='题解id', primary_key=True)
-    subQuestion = models.ForeignKey(SubQuestion, on_delete=models.CASCADE, verbose_name="题解对应子题目的id")
+    subQuestion = models.ForeignKey(SubQuestion, on_delete=models.CASCADE, verbose_name="题解对应的子题目")
+    wxUser = models.ForeignKey(WXUser, on_delete=models.CASCADE, verbose_name='发布此题解的用户')
     content = models.TextField(verbose_name='题解内容')
     likes = models.IntegerField(verbose_name='点赞数', default=0)
     reports = models.IntegerField(verbose_name='举报数', default=0)
@@ -172,7 +174,6 @@ class Solution(models.Model):
         before = self.is_bad_solution()
         self.set_bad_solution()
         after = self.is_bad_solution()
-        self.save()
         return before, after
 
     def positive_evaluation(self):
@@ -190,14 +191,19 @@ class Solution(models.Model):
     def add_like(self):
         self.likes += 1
         self.positive_evaluation()
+        self.wxUser.modify_likes(1)
+        self.save()
 
     def add_report(self):
         self.reports += 1
         self.negative_evaluation()
+        self.wxUser.modify_likes(-1)
+        self.save()
 
     def add_approval(self):
         self.approval += 1
         self.positive_evaluation()
+        self.save()
 
     def debug(self):
         before = self.is_bad_solution()
@@ -211,7 +217,7 @@ class Solution(models.Model):
     def save(self, *args, **kwargs):
         try:
             # self.debug()
-             #如果用django管理器加举报数，则不要注释此行，正式版请把此行注释
+            # 如果用django管理器加举报数，则不要注释此行，正式版请把此行注释
 
             self.full_clean()
             super().save(*args, **kwargs)

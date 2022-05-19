@@ -112,7 +112,7 @@ class SolutionViewClass(View):
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, 'json参数格式错误'))
 
-        solution_list = admin_models.Solution.objects.filter(subQuestion__id=sub_que_id)
+        solution_list = admin_models.Solution.objects.filter(subQuestion__id=sub_que_id).order_by('-likes')
         serializer = ClientSolutionSerializer(solution_list, many=True, context={'openid': request.session['openid']})
         num = len(solution_list)
         data = {'solution_num': num,
@@ -139,6 +139,7 @@ class SolutionViewClass(View):
         wx_user = WXUser.objects.get(id__exact=request.session['openid'])
         admin_models.Solution.objects.create(subQuestion=sub_que_obj, wxUser=wx_user,
                                              content=content)
+        wx_user.add_solution_sum()
 
         return JsonResponse(data=wrap_response_data(0))
 

@@ -21,6 +21,7 @@ class WXUser(models.Model):
     total_reading = models.IntegerField(verbose_name='做过的阅读题小题总数', default=0, null=False)
     right_reading = models.IntegerField(verbose_name='做对的阅读题小题数', default=0, null=False)
     status = models.IntegerField(verbose_name="刷题阶段", default=0, null=False)
+    solution_sum = models.IntegerField(verbose_name='用户发表的题解总数', default=0)
     likes = models.IntegerField(verbose_name='该用户发表的题解被点赞的总数', default=0)
     reports = models.IntegerField(verbose_name='该用户发表的题解被举报的总数', default=0)
 
@@ -40,6 +41,10 @@ class WXUser(models.Model):
 
     def modify_reports(self, variance: int):
         self.reports += variance
+        self.save()
+
+    def add_solution_sum(self):
+        self.solution_sum += 1
         self.save()
 
     class Meta:

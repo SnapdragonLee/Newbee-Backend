@@ -15,20 +15,23 @@
 
 ### UserTable
 
-| 列名               | 数据类型及精度 | 约束条件                            | 说明                                               |
-| ------------------ | -------------- | ----------------------------------- | -------------------------------------------------- |
-| id                 | varchar(50)    | PRIMARY KEY                         | 微信提供的唯一标识openid                           |
-| user_name          | varchar(20)    | NOT NULL                            | 用户名                                             |
-| recent_choice_que  | int            | CHECK(>=0)                          | 该用户近期答对选择题的数量                         |
-| recent_cloze_que   | int            | CHECK(>=0)                          | 该用户近期答对完形小题的数量                       |
-| recent_reading_que | int            | CHECK(>=0)                          | 该用户近期答对阅读小题的数量                       |
-| total_choice_que   | int            | CHECK(>=0)                          | 用户做过的选择题的总数                             |
-| right_choice_que   | int            | CHECK(>=0)                          | 用户做对的选择题的数量                             |
-| total_reading_que  | int            | CHECK(>=0)                          | 用户做过的阅读小题的总数                           |
-| right_reading_que  | int            | CHECK(>=0)                          | 用户做对的阅读小题的数量                           |
-| total_cloze_que    | int            | CHECK(>=0)                          | 用户做过的完形小题的总数                           |
-| right_cloze_que    | int            | CHECK(>=0)                          | 用户做对的完形小题的数量                           |
-| status             | int            | NOT NULL, CHECK(type in {"0", "1"}) | 0表示用户正在刷题库中的题，1表示正在刷错题本中的题 |
+| 列名               | 数据类型及精度 | 约束条件                            | 说明                                                         |
+| ------------------ | -------------- | ----------------------------------- | ------------------------------------------------------------ |
+| id                 | varchar(50)    | PRIMARY KEY                         | 微信提供的唯一标识openid                                     |
+| user_name          | varchar(20)    | NOT NULL                            | 用户名                                                       |
+| recent_choice_que  | int            | CHECK(>=0)                          | 该用户近期答对选择题的数量                                   |
+| recent_cloze_que   | int            | CHECK(>=0)                          | 该用户近期答对完形小题的数量                                 |
+| recent_reading_que | int            | CHECK(>=0)                          | 该用户近期答对阅读小题的数量                                 |
+| total_choice_que   | int            | CHECK(>=0)                          | 用户做过的选择题的总数                                       |
+| right_choice_que   | int            | CHECK(>=0)                          | 用户做对的选择题的数量                                       |
+| total_reading_que  | int            | CHECK(>=0)                          | 用户做过的阅读小题的总数                                     |
+| right_reading_que  | int            | CHECK(>=0)                          | 用户做对的阅读小题的数量                                     |
+| total_cloze_que    | int            | CHECK(>=0)                          | 用户做过的完形小题的总数                                     |
+| right_cloze_que    | int            | CHECK(>=0)                          | 用户做对的完形小题的数量                                     |
+| status             | int            | NOT NULL, CHECK(type in {"0", "1"}) | 0表示用户正在刷题库中的题，1表示正在刷错题本中的题           |
+| solution_sum       | int            | NOT NULL, CHECK(>=0)                | 用户发表的题解总数（管理员删除题解不会导致此值变小）         |
+| likes              | int            | NOT NULL, CHECK(>=0)                | 用户发表的题解收到点赞的总数（管理员删除题解不会导致此值变小） |
+| reports            | int            | NOT NULL, CHECK(>=0)                | 用户发表的题解收到举报的总数（管理员删除题解不会导致此值变小） |
 
 
 

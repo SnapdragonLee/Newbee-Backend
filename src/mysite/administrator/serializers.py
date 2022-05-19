@@ -44,10 +44,15 @@ class DesignatedQuestionSerializer(serializers.ModelSerializer):
 class SolutionSerializer(serializers.ModelSerializer):
     bad_solution = SerializerMethodField()
     approved = SerializerMethodField()
+    author_username = SerializerMethodField()
+    author_solution_sum = SerializerMethodField()
+    author_likes = SerializerMethodField()
+    author_reports = SerializerMethodField()
 
     class Meta:
         model = Solution
-        fields = ['id', 'content', 'likes', 'reports', 'bad_solution', 'approved']
+        fields = ['id', 'content', 'likes', 'reports', 'bad_solution', 'approved', 'author_username',
+                  'author_solution_sum', 'author_likes', 'author_reports']
 
     def get_bad_solution(self, solution_obj: Solution):
         if solution_obj.is_bad_solution():
@@ -58,6 +63,18 @@ class SolutionSerializer(serializers.ModelSerializer):
     def get_approved(self, obj: Solution):
         return 1 if AdminApproveSolution.objects.filter(
             Q(admin=self.context['request'].user) & Q(solution=obj)).exists() else 0
+
+    def get_author_username(self, solution_obj: Solution):
+        return solution_obj.wxUser.user_name
+
+    def get_author_solution_sum(self, solution_obj: Solution):
+        return solution_obj.wxUser.solution_sum
+
+    def get_author_likes(self, solution_obj: Solution):
+        return solution_obj.wxUser.likes
+
+    def get_author_reports(self, solution_obj: Solution):
+        return solution_obj.wxUser.reports
 
 
 class OperationRecordSerializer(serializers.ModelSerializer):

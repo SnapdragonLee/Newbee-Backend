@@ -16,7 +16,8 @@ class ListUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WXUser
-        fields = ['id', 'name', "numm", 'numc', 'numr', 'right_choice_que', 'right_reading_que', 'right_cloze_que']
+        fields = ['id', 'name', "numm", 'numc', 'numr', 'right_choice_que', 'right_reading_que', 'right_cloze_que',
+                  'solution_sum', 'likes', 'reports']
 
     # 这里之所以这么写，是因为前端需要的json中的key值，为name、numm、numc、numr故也需要在序列化时，把key的名字改成这些
     # 如果前端要求json中key的值与模型中的字段名相同，则可以按以下写法
@@ -88,7 +89,7 @@ class ClientSolutionSerializer(serializers.ModelSerializer):
         return solution_obj.wxUser.user_name
 
     def get_author_solution_sum(self, solution_obj: Solution):
-        return Solution.objects.filter(wxUser=solution_obj.wxUser).count()
+        return solution_obj.wxUser.solution_sum
 
     def get_author_likes(self, solution_obj: Solution):
         return solution_obj.wxUser.likes

@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import WXUser, WrongQuestions, ListOfQuestion, history, done_question, UserApproveSolution
-
+from models.basic.questions import WXUser
+from .models import WrongQuestions, ListOfQuestion, history, done_question, UserApproveSolution
 # Register your models here.
 
 admin.site.register(WXUser)

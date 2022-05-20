@@ -1,22 +1,24 @@
-from django.contrib.auth import authenticate, login, logout
-from utils.response import wrap_response_data
-from utils.auth_decorators import admin_logged
+import json
+import datetime
+
 from django.http import JsonResponse
+from django.db import transaction
+from django.core.paginator import Paginator
+from django.contrib.auth.models import User
+from django.utils.decorators import method_decorator
+from django.contrib.auth import authenticate, login, logout
 from django.views.generic.base import View
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from client import models as client_models
-from . import models as admin_models
-from client.serializers import ListUserSerializer
+
+from .models import OperationRecord
+from models.basic.user import WXUser
+from models.basic.notice import Notice
+from models.basic.questions import Question, SubQuestion, Solution, AdminApproveSolution
 from .serializers import ListQuestionSerializer, DesignatedQuestionSerializer, SubQuestionSerializer, \
     SolutionSerializer, OperationRecordSerializer, GraphDataSerializer
-from django.utils.decorators import method_decorator
-import json
-from django.db import transaction
-import datetime
-from django.contrib.auth.models import User
-from administrator.models import OperationRecord
-from django.db.models import Q, F
-from enum import Enum
+from models.serializers import ListUserSerializer
+
+from utils.response import wrap_response_data
+from utils.auth_decorators import admin_logged
 from utils.defines import *
 
 
@@ -84,7 +86,7 @@ class ListUser(View):
             if int(sort_type) == 0:
                 order_method_str = '-' + order_method_str
 
-        query_set = client_models.WXUser.objects.all().order_by(order_method_str)
+        query_set = WXUser.objects.all().order_by(order_method_str)
 
         data = get_user_list(page_number, page_size, query_set)
         return JsonResponse(data=wrap_response_data(0, **data))
@@ -96,7 +98,7 @@ class ListUser(View):
         try:
             with transaction.atomic():
                 for user_id in id_list:
-                    wxuser_obj = client_models.WXUser.objects.get(id=user_id)
+                    wxuser_obj = WXUser.objects.get(id=user_id)
                     add_operation(OperationRecord.OP_TYPE.DEL, request.user, '小程序用户: ' + wxuser_obj.user_name)
                     wxuser_obj.delete()
         except Exception as e:
@@ -112,7 +114,7 @@ class DesignatedUser(View):
         name = request.GET['name']
         page_number = request.GET['pagenumber']
         page_size = request.GET['pagesize']
-        query_set = client_models.WXUser.objects.filter(user_name=name).order_by('id')
+        query_set = WXUser.objects.filter(user_name=name).order_by('id')
         data = get_user_list(page_number, page_size, query_set)
         return JsonResponse(data=wrap_response_data(0, **data))
 
@@ -126,9 +128,9 @@ class ListQuestion(View):
         que_title = request.GET.get('title')
 
         if que_title is None or not que_title.strip():
-            query_set = admin_models.Question.objects.filter(type=que_type).order_by('title')
+            query_set = Question.objects.filter(type=que_type).order_by('title')
         else:
-            query_set = admin_models.Question.objects.filter(type=que_type, title__contains=que_title).order_by('title')
+            query_set = Question.objects.filter(type=que_type, title__contains=que_title).order_by('title')
 
         paginator = Paginator(query_set, page_size)
         que_list = paginator.get_page(page_number).object_list
@@ -146,7 +148,7 @@ class ListQuestion(View):
         try:
             with transaction.atomic():
                 for que_id in que_id_list:
-                    que_obj = admin_models.Question.objects.get(id__exact=que_id)
+                    que_obj = Question.objects.get(id__exact=que_id)
                     add_operation(OperationRecord.OP_TYPE.DEL, request.user, que_obj.title)
                     que_obj.delete()
         except Exception as e:
@@ -161,7 +163,7 @@ class DesignatedQuestion(View):
     def get(self, request):
         que_id = request.GET['id']
         try:
-            que = admin_models.Question.objects.get(id=que_id)
+            que = Question.objects.get(id=que_id)
         except Exception as e:
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, '题目id不存在'))
@@ -195,18 +197,18 @@ class DesignatedQuestion(View):
 
         try:
             with transaction.atomic():
-                new_question = admin_models.Question(type=que_type, title=que_title,
-                                                     sub_que_num=sub_que_num, text=que_text)
+                new_question = Question(type=que_type, title=que_title,
+                                        sub_que_num=sub_que_num, text=que_text)
 
                 new_question.save()
 
                 for sub_que in sub_que_json_list:
-                    new_sub_question = admin_models.SubQuestion(question=new_question,
-                                                                stem=sub_que.get('stem'),
-                                                                answer=sub_que['answer'], number=sub_que['number'],
-                                                                A=sub_que['options'][0], B=sub_que['options'][1],
-                                                                C=sub_que['options'][2], D=sub_que['options'][3]
-                                                                )
+                    new_sub_question = SubQuestion(question=new_question,
+                                                   stem=sub_que.get('stem'),
+                                                   answer=sub_que['answer'], number=sub_que['number'],
+                                                   A=sub_que['options'][0], B=sub_que['options'][1],
+                                                   C=sub_que['options'][2], D=sub_que['options'][3]
+                                                   )
 
                     new_sub_question.save()
         except Exception as e:
@@ -236,7 +238,7 @@ class DesignatedQuestion(View):
         child_input_list.sort(key=lambda child: child['number'])
 
         try:
-            father = admin_models.Question.objects.get(id=father_id)
+            father = Question.objects.get(id=father_id)
         except Exception as e:
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, '不存在为该id的题目'))
@@ -252,7 +254,7 @@ class DesignatedQuestion(View):
                 father.sub_que_num = father_sub_que_num
                 father.save()
 
-                child_query_set = admin_models.SubQuestion.objects.filter(question_id=father_id).order_by('number')
+                child_query_set = SubQuestion.objects.filter(question_id=father_id).order_by('number')
 
                 i = 0
                 while i < new_child_cnt:
@@ -274,9 +276,9 @@ class DesignatedQuestion(View):
                         child_object.answer = answer
                         child_object.number = number
                     else:
-                        child_object = admin_models.SubQuestion(question=father, stem=stem,
-                                                                answer=answer, number=number,
-                                                                A=A, B=B, C=C, D=D)
+                        child_object = SubQuestion(question=father, stem=stem,
+                                                   answer=answer, number=number,
+                                                   A=A, B=B, C=C, D=D)
 
                     child_object.save()
                     i += 1
@@ -302,7 +304,7 @@ class ListSolution(View):
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, '获取题解时，提供的参数格式有误'))
 
-        query_set = admin_models.Solution.objects.filter(subQuestion_id=sub_que_id).order_by('-reports')
+        query_set = Solution.objects.filter(subQuestion_id=sub_que_id).order_by('-reports')
 
         # total = query_set.count()
         total = len(query_set)
@@ -319,17 +321,17 @@ class ListSolution(View):
         solution_id_list = request.GET.getlist('id')
 
         try:
-            sub_que_obj = admin_models.Solution.objects.get(id=solution_id_list[0]).subQuestion
-            que_obj = sub_que_obj.question
             with transaction.atomic():
                 for solution_id in solution_id_list:
-                    admin_models.Solution.objects.get(id=solution_id).delete()
+                    Solution.objects.get(id=solution_id).delete()
 
         except Exception as e:
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, "有部分或全部题解id不合法，未执行任何删除操作"))
 
-        # add_operation(OperationRecord.OP_TYPE.DEL, request.user, que_obj.title + '  第' + str(sub_que_obj.number) + '小题题解')
+        # add_operation(OperationRecord.OP_TYPE.DEL, request.user, que_obj.title + '  第'
+        # + str(sub_que_obj.number) + '小题题解')
+
         return JsonResponse(data=wrap_response_data(0))
 
     @method_decorator(admin_logged)
@@ -341,13 +343,13 @@ class ListSolution(View):
             print(e)
             return JsonResponse(data=wrap_response_data(3, 'json参数格式错误'))
 
-        if admin_models.AdminApproveSolution.objects.filter(admin=request.user, solution_id=solution_id).exists():
+        if AdminApproveSolution.objects.filter(admin=request.user, solution_id=solution_id).exists():
             return JsonResponse(data=wrap_response_data(3, '您已经确认过此题解'))
 
         try:
             with transaction.atomic():
-                admin_models.AdminApproveSolution.objects.create(admin=request.user, solution_id=solution_id)
-                solution_obj = admin_models.Solution.objects.get(id__exact=solution_id)
+                AdminApproveSolution.objects.create(admin=request.user, solution_id=solution_id)
+                solution_obj = Solution.objects.get(id__exact=solution_id)
                 solution_obj.add_approval()
         except Exception as e:
             print(e.args)
@@ -358,9 +360,9 @@ class ListSolution(View):
 
 @admin_logged
 def has_bad_solution(request):
-    bad_solution_sum = admin_models.Solution.objects.filter(is_bad=True).count()
-    approved_bad_solution_num = admin_models.AdminApproveSolution.objects.filter(admin=request.user,
-                                                                                 solution__is_bad=True).count()
+    bad_solution_sum = Solution.objects.filter(is_bad=True).count()
+    approved_bad_solution_num = AdminApproveSolution.objects.filter(admin=request.user,
+                                                                    solution__is_bad=True).count()
     has = 0 if bad_solution_sum == approved_bad_solution_num else 1
     data = {'has_bad_solution': has}
 
@@ -368,7 +370,7 @@ def has_bad_solution(request):
 
 
 def check_has_notice():
-    return True if admin_models.Notice.objects.count() >= 1 else False
+    return True if Notice.objects.count() >= 1 else False
 
 
 class NoticeViewClass(View):
@@ -376,10 +378,10 @@ class NoticeViewClass(View):
     def get(self, request):
 
         if not check_has_notice():
-            notice_obj = admin_models.Notice()
+            notice_obj = Notice()
             notice_obj.save()
         else:
-            notice_obj = admin_models.Notice.objects.all()[0]
+            notice_obj = Notice.objects.all()[0]
 
         data = {'content': notice_obj.content,
                 'time': str(notice_obj.time + datetime.timedelta(hours=8)).split('.')[0]}
@@ -396,9 +398,9 @@ class NoticeViewClass(View):
             return JsonResponse(data=wrap_response_data(3, 'json格式错误'))
 
         if not check_has_notice():
-            notice_obj = admin_models.Notice()
+            notice_obj = Notice()
         else:
-            notice_obj = admin_models.Notice.objects.all()[0]
+            notice_obj = Notice.objects.all()[0]
 
         notice_obj.content = content
         notice_obj.save()
@@ -428,20 +430,20 @@ def get_operation_record(request):
 
 
 def serialize_top_users(field_name: str):
-    top_users = client_models.WXUser.objects.all().order_by(field_name)[0:5]
+    top_users = WXUser.objects.all().order_by(field_name)[0:5]
     serializer = GraphDataSerializer(top_users, many=True, context={'field_name': field_name})
     return json.loads(json.dumps(serializer.data))
 
 
 def get_graph_data(request):
-    user_sum = client_models.WXUser.objects.all().count()
-    choice_sum = admin_models.Question.objects.filter(type=CHOICE_QUE_NAME).count()
-    cloze_sum = admin_models.Question.objects.filter(type=CLOZE_QUE_NAME).count()
-    reading_sum = admin_models.Question.objects.filter(type=READING_QUE_NAME).count()
+    user_sum = WXUser.objects.all().count()
+    choice_sum = Question.objects.filter(type=CHOICE_QUE_NAME).count()
+    cloze_sum = Question.objects.filter(type=CLOZE_QUE_NAME).count()
+    reading_sum = Question.objects.filter(type=READING_QUE_NAME).count()
     question_sum = choice_sum + cloze_sum + reading_sum
-    bad_solution_sum = admin_models.Solution.objects.filter(is_bad=True).count()
-    approved_bad_solution_sum = admin_models.AdminApproveSolution.objects.filter(admin=request.user,
-                                                                                 solution__is_bad=True).count()
+    bad_solution_sum = Solution.objects.filter(is_bad=True).count()
+    approved_bad_solution_sum = AdminApproveSolution.objects.filter(admin=request.user,
+                                                                    solution__is_bad=True).count()
     unapproved_bad_solution_sum = bad_solution_sum - approved_bad_solution_sum
 
     data = {"usernumber": user_sum, "questionnumber": question_sum, "bad_solution_number": unapproved_bad_solution_sum,

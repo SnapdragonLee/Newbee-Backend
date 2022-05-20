@@ -1,10 +1,9 @@
 from rest_framework import serializers
-from .models import Question, SubQuestion, Solution, OperationRecord, AdminApproveSolution
+from .models import OperationRecord
+from models.basic.user import WXUser
+from models.basic.questions import Question, SubQuestion, Solution, AdminApproveSolution
 from rest_framework.serializers import SerializerMethodField
-from django.db.models import Q, F
-from django.contrib.auth.models import User
-from client.models import WXUser
-from utils.defines import *
+from django.db.models import Q
 
 
 class ListQuestionSerializer(serializers.ModelSerializer):

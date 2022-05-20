@@ -1,24 +1,28 @@
 import json
-import requests
 import datetime
+import requests
 
-from .models import WXUser, WrongQuestions, ListOfQuestion, history, done_question, UserApproveSolution
-from administrator.models import Question, SubQuestion, Notice
-from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, \
-    client_ListQuestionSerializer, client_ListDoneQuestionSerializer, AnswerSerializer, ClientSolutionSerializer
-from utils.response import wrap_response_data
 from django.http import JsonResponse
 from django.views.generic.base import View
 from django.utils.decorators import method_decorator
-from utils.auth_decorators import user_logged
 from django.db import transaction
-from utils.defines import *
 from django.core.paginator import Paginator
-from administrator import models as admin_models
 
-# Create your views here.
+from .models import WrongQuestions, ListOfQuestion, history, done_question, UserApproveSolution
+from models.basic.user import WXUser
+from models.basic.notice import Notice
+from models.basic.questions import Question, SubQuestion, Solution
+from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, \
+    client_ListQuestionSerializer, client_ListDoneQuestionSerializer, AnswerSerializer, ClientSolutionSerializer
+
+from utils.response import wrap_response_data
+from utils.auth_decorators import user_logged
+from utils.defines import *
+
 from mysite.settings import APPID, SECRET
 
+
+# Create your views here.
 
 def user_login(request):
     appid = APPID
@@ -112,7 +116,7 @@ class SolutionViewClass(View):
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, 'json参数格式错误'))
 
-        solution_list = admin_models.Solution.objects.filter(subQuestion__id=sub_que_id).order_by('-likes')
+        solution_list = Solution.objects.filter(subQuestion__id=sub_que_id).order_by('-likes')
         serializer = ClientSolutionSerializer(solution_list, many=True, context={'openid': request.session['openid']})
         num = len(solution_list)
         data = {'solution_num': num,
@@ -131,14 +135,14 @@ class SolutionViewClass(View):
             return JsonResponse(data=wrap_response_data(3, 'json参数格式错误'))
 
         try:
-            sub_que_obj = admin_models.SubQuestion.objects.get(id__exact=sub_que_id)
+            sub_que_obj = SubQuestion.objects.get(id__exact=sub_que_id)
         except Exception as e:
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, '不存在为该id的子题目'))
 
         wx_user = WXUser.objects.get(id__exact=request.session['openid'])
-        admin_models.Solution.objects.create(subQuestion=sub_que_obj, wxUser=wx_user,
-                                             content=content)
+        Solution.objects.create(subQuestion=sub_que_obj, wxUser=wx_user,
+                                content=content)
         wx_user.add_solution_sum()
 
         return JsonResponse(data=wrap_response_data(0))
@@ -160,7 +164,7 @@ def solution_like(request):
 
     try:
         with transaction.atomic():
-            solution = admin_models.Solution.objects.get(id=solution_id)
+            solution = Solution.objects.get(id=solution_id)
             solution.add_like()
             UserApproveSolution.objects.create(user=user, solution=solution, type=UserApproveSolution.Type.LIKE)
     except Exception as e:
@@ -186,7 +190,7 @@ def solution_report(request):
 
     try:
         with transaction.atomic():
-            solution = admin_models.Solution.objects.get(id=solution_id)
+            solution = Solution.objects.get(id=solution_id)
             solution.add_report()
             UserApproveSolution.objects.create(user=user, solution=solution, type=UserApproveSolution.Type.REPORT)
     except Exception as e:

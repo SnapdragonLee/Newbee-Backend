@@ -5,3 +5,4 @@ venv/
 db.sqlite3
 *_initial.py
 *settings.json
+*.sql

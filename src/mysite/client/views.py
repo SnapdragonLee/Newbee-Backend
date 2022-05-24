@@ -381,7 +381,7 @@ def single_history(request):
     question.delete()
     return JsonResponse(data=wrap_response_data(0))
 
-
+@user_logged
 def detail(request):
     user_id = request.session['openid']
     id = request.GET['id']

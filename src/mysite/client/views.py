@@ -382,7 +382,6 @@ def single_history(request):
     return JsonResponse(data=wrap_response_data(0))
 
 
-@user_logged
 def detail(request):
     user_id = request.session['openid']
     id = request.GET['id']
@@ -392,7 +391,7 @@ def detail(request):
         return JsonResponse(data=wrap_response_data(3, '查询不到该题目，可能被管理员删除了.,.'))
     serializer = client_DesignatedQuestionSerializer(question)
     data = json.loads(json.dumps(serializer.data))
-    done_question_detail = done_question.objects.filter(wxUser_id=user_id, subQuestion_id=id).order_by('sub_questionid')
+    done_question_detail = done_question.objects.filter(wxUser_id=user_id, question_id=id).order_by('subQuestion_id')
     serializer = client_ListDoneQuestionSerializer(done_question_detail, many=True)
     done_question_detail_list = json.loads(json.dumps(serializer.data))
     data['sub_que'] = done_question_detail_list
@@ -439,7 +438,8 @@ def check_question(request):
             obj.option = item['submit']
             obj.save()
         except:
-            done_question.objects.create(wxUser_id=user_id, subQuestion_id=item['sub_id'], option=item['submit'])
+            done_question.objects.create(wxUser_id=user_id, question_id=post_data['id'],
+                                         subQuestion_id=item['sub_id'], option=item['submit'])
 
         i += 1
 

@@ -8,8 +8,8 @@ test_actor = "client"  # something like "admin" \ "client"
 test_profile = "get_question"  # you need to create json file in profile documents
 
 
-# main_addr = "http://127.0.0.1:8000"  # local server location
-main_addr = "http://122.9.32.180"  # remote server location
+main_addr = "http://127.0.0.1:8000"  # local server location
+# main_addr = "http://122.9.32.180"  # remote server location
 
 ##################################################################################################
 

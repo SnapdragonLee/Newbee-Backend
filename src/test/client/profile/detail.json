@@ -1,0 +1,11 @@
+{
+  "test_actor": "user",
+  "type": "get",
+  "login_data": {
+    "code": "oXvTf5evLSrviTOCI76sVx1rmZ9w",
+    "username": "Guborrow"
+  },
+
+  "test_api": "/api/user/detail?id=23",
+  "data": ""
+}

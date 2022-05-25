@@ -13,7 +13,8 @@ from models.basic.user import WXUser
 from models.basic.notice import Notice
 from models.basic.questions import Question, SubQuestion, Solution
 from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, \
-    client_ListQuestionSerializer, client_ListDoneQuestionSerializer, AnswerSerializer, ClientSolutionSerializer
+    client_ListQuestionSerializer, AnswerSerializer, ClientSolutionSerializer, \
+    client_DetailSerializer
 
 from utils.response import wrap_response_data
 from utils.auth_decorators import user_logged
@@ -381,20 +382,22 @@ def single_history(request):
     question.delete()
     return JsonResponse(data=wrap_response_data(0))
 
-@user_logged
+
 def detail(request):
-    user_id = request.session['openid']
+    user_id = 'oXvTf5evLSrviTOCI76sVx1rmZ9w'  # request.session['openid']
     id = request.GET['id']
     try:
         question = Question.objects.get(id=id)
     except:
         return JsonResponse(data=wrap_response_data(3, '查询不到该题目，可能被管理员删除了.,.'))
+
     serializer = client_DesignatedQuestionSerializer(question)
     data = json.loads(json.dumps(serializer.data))
-    done_question_detail = done_question.objects.filter(wxUser_id=user_id, question_id=id).order_by('subQuestion_id')
-    serializer = client_ListDoneQuestionSerializer(done_question_detail, many=True)
-    done_question_detail_list = json.loads(json.dumps(serializer.data))
-    data['sub_que'] = done_question_detail_list
+    sub_question_query_set = SubQuestion.objects.filter(question__id=id).order_by('number')
+    serializer = client_DetailSerializer(sub_question_query_set, many=True, context={'openid': user_id})
+    sub_question_json_list = json.loads(json.dumps(serializer.data))
+    data['sub_que'] = sub_question_json_list
+
     return JsonResponse(data=wrap_response_data(0, **data))
 
 

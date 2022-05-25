@@ -5,7 +5,7 @@ import time
 from urllib import parse
 
 test_actor = "client"  # something like "admin" \ "client"
-test_profile = "get_question"  # you need to create json file in profile documents
+test_profile = "detail"  # you need to create json file in profile documents
 
 
 main_addr = "http://127.0.0.1:8000"  # local server location

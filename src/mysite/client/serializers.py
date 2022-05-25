@@ -16,6 +16,25 @@ class client_SubQuestionSerializer(serializers.ModelSerializer):
         return data
 
 
+class client_DetailSerializer(serializers.ModelSerializer):
+    options = SerializerMethodField()
+    option = SerializerMethodField()
+
+    class Meta:
+        model = SubQuestion
+        fields = ['id', 'number', 'stem', 'options', 'answer', 'option']
+        # fields = ['id', 'number', 'stem', 'options', 'answer']
+
+    def get_options(self, sub_question):
+        data = [sub_question.A, sub_question.B, sub_question.C, sub_question.D]
+        return data
+
+    def get_option(self, obj: SubQuestion):
+        openid = self.context['openid']
+        data = done_question.objects.get(wxUser_id=openid, subQuestion_id=obj.id)
+        return data.option
+
+
 class client_DesignatedQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question

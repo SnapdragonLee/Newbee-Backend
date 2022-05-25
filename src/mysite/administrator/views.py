@@ -430,7 +430,8 @@ def get_operation_record(request):
 
 
 def serialize_top_users(field_name: str):
-    top_users = WXUser.objects.all().order_by(field_name)[0:5]
+    rank_field_name = '-' + field_name
+    top_users = WXUser.objects.all().order_by(rank_field_name)[0:5]
     serializer = GraphDataSerializer(top_users, many=True, context={'field_name': field_name})
     return json.loads(json.dumps(serializer.data))
 

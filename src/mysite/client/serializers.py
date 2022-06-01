@@ -64,8 +64,11 @@ class ClientSolutionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Solution
-        fields = ['id', 'content', 'likes', 'reports', 'approved', 'author_username', 'author_solution_sum',
+        fields = ['number', 'id', 'content', 'likes', 'reports', 'approved', 'author_username', 'author_solution_sum',
                   'author_likes', 'author_reports']
+
+    def get_number(self, solution_obj: Solution):
+        return self.context['sub_question_number']
 
     def get_approved(self, obj: Solution):
         openid = self.context['openid']

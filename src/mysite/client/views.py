@@ -112,16 +112,26 @@ class SolutionViewClass(View):
     @method_decorator(user_logged)
     def get(self, request):
         try:
-            sub_que_id = request.GET['id']
+            que_id = request.GET['id']
         except Exception as e:
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, 'json参数格式错误'))
 
-        solution_list = Solution.objects.filter(subQuestion__id=sub_que_id).order_by('-likes')
-        serializer = ClientSolutionSerializer(solution_list, many=True, context={'openid': request.session['openid']})
-        num = len(solution_list)
-        data = {'solution_num': num,
-                'solution': json.loads(json.dumps(serializer.data))}
+        sub_question_list = SubQuestion.objects.filter(question__id=que_id).order_by('number')
+
+        solution_num = 0
+        solution_list = []
+
+        for sub_question in sub_question_list:
+            solution_query_set = Solution.objects.filter(subQuestion=sub_question).order_by('-likes')
+            serializer = ClientSolutionSerializer(solution_query_set, many=True,
+                                                  context={'openid': request.session['openid'],
+                                                           'sub_question_number': sub_question.number})
+            solution_num += len(solution_query_set)
+            solution_list.extend(json.loads(json.dumps(serializer.data)))
+
+        data = {'solution_num': solution_num,
+                'solution': solution_list}
 
         return JsonResponse(data=wrap_response_data(0, **data))
 
@@ -381,6 +391,7 @@ def single_history(request):
     question = ListOfQuestion.objects.get(openid=user_id, question_id=id)
     question.delete()
     return JsonResponse(data=wrap_response_data(0))
+
 
 @user_logged
 def detail(request):

@@ -61,6 +61,7 @@ class ClientSolutionSerializer(serializers.ModelSerializer):
     author_solution_sum = SerializerMethodField()
     author_likes = SerializerMethodField()
     author_reports = SerializerMethodField()
+    number = SerializerMethodField()
 
     class Meta:
         model = Solution

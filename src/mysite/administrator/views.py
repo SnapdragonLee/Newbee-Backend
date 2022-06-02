@@ -325,6 +325,7 @@ class ListSolution(View):
                 for solution_id in solution_id_list:
                     sol = Solution.objects.get(id=solution_id)
                     sol.wxUser.rank_solution -= 4
+                    sol.wxUser.save()
                     sol.delete()
 
 

@@ -39,6 +39,8 @@ class WXUser(models.Model):
 
     def add_solution_sum(self):
         self.solution_sum += 1
+        self.rank_solution += 2
+
         self.save()
 
     class Meta:

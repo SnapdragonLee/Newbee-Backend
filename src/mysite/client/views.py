@@ -156,8 +156,6 @@ class SolutionViewClass(View):
                                 content=content)
         wx_user.add_solution_sum()
 
-        wx_user.rank_solution += 2
-
         return JsonResponse(data=wrap_response_data(0))
 
 

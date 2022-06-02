@@ -323,7 +323,10 @@ class ListSolution(View):
         try:
             with transaction.atomic():
                 for solution_id in solution_id_list:
-                    Solution.objects.get(id=solution_id).delete()
+                    sol = Solution.objects.get(id=solution_id)
+                    sol.wxUser.rank_solution -= 4
+                    sol.delete()
+
 
         except Exception as e:
             print(e.args)

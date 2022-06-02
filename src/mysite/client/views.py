@@ -14,7 +14,7 @@ from models.basic.notice import Notice
 from models.basic.questions import Question, SubQuestion, Solution
 from .serializers import client_DesignatedQuestionSerializer, client_SubQuestionSerializer, \
     client_ListQuestionSerializer, AnswerSerializer, ClientSolutionSerializer, \
-    client_DetailSerializer
+    client_DetailSerializer, rankQuestionSerializer, rankSolutionSerializer
 
 from utils.response import wrap_response_data
 from utils.auth_decorators import user_logged
@@ -155,6 +155,8 @@ class SolutionViewClass(View):
         Solution.objects.create(subQuestion=sub_que_obj, wxUser=wx_user,
                                 content=content)
         wx_user.add_solution_sum()
+
+        wx_user.rank_solution += 2
 
         return JsonResponse(data=wrap_response_data(0))
 
@@ -435,16 +437,25 @@ def check_question(request):
         if type == CHOICE_QUE_NAME:
             if item['submit'] == answers[i]['answer']:
                 WXsubmit.right_choice += 1
+                WXsubmit.rank_question += 4
+            else:
+                WXsubmit.rank_question += 1
             WXsubmit.total_choice += 1
 
         elif type == CLOZE_QUE_NAME:
             if item['submit'] == answers[i]['answer']:
                 WXsubmit.right_cloze += 1
+                WXsubmit.rank_question += 6
+            else:
+                WXsubmit.rank_question += 1
             WXsubmit.total_cloze += 1
 
         else:
             if item['submit'] == answers[i]['answer']:
                 WXsubmit.right_reading += 1
+                WXsubmit.rank_question += 6
+            else:
+                WXsubmit.rank_question += 1
             WXsubmit.total_reading += 1
 
         try:
@@ -481,6 +492,28 @@ def statistics(request):
         'cloze_right': WXsubmit.right_cloze,
         'reading_num': WXsubmit.total_reading,
         'reading_right': WXsubmit.right_reading,
+    }
+
+    return JsonResponse(data=wrap_response_data(0, **data))
+
+
+def rank_que(request):
+    rank_list = WXUser.objects.all().order_by("rank_question")[0:19]
+    serializer = rankQuestionSerializer(rank_list, many=True)
+
+    data = {
+        'rank_que_list': json.loads(json.dumps(serializer.data))
+    }
+
+    return JsonResponse(data=wrap_response_data(0, **data))
+
+
+def rank_sol(request):
+    rank_list = WXUser.objects.all().order_by("rank_solution")[0:19]
+    serializer = rankSolutionSerializer(rank_list, many=True)
+
+    data = {
+        'rank_sol_list': json.loads(json.dumps(serializer.data))
     }
 
     return JsonResponse(data=wrap_response_data(0, **data))

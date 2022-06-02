@@ -5,8 +5,7 @@ import time
 from urllib import parse
 
 test_actor = "client"  # something like "admin" \ "client"
-test_profile = "detail"  # you need to create json file in profile documents
-
+test_profile = "rank_sol"  # you need to create json file in profile documents
 
 main_addr = "http://127.0.0.1:8000"  # local server location
 # main_addr = "http://122.9.32.180"  # remote server location
@@ -94,6 +93,7 @@ def test():
 
     if resp.status_code == 200:
         verify = json.loads(resp.content.decode("utf-8"), parse_int=str)
+        out("return data：%s \n" % verify)
         out("return code(ret)：%s，backend considered this situation!" % verify["ret"])
         out("return message(msg)：%s" % verify["msg"])
 
@@ -102,6 +102,6 @@ def test():
 
 
 if __name__ == "__main__":
-    login()
+    # login()
     print("\n")
     test()

@@ -11,8 +11,10 @@ urlpatterns = [
     path('wrong_que_book', views.wrong_que_bookClass.as_view()),
     path('record', views.recordClass.as_view()),
     path('notice', views.NoticeViewClass.as_view(), name='user_notice'),
+    path('single_history', views.single_history),
     path('detail', views.detail),
     path('check_question', views.check_question),
     path('statistics', views.statistics),
-    path('single_history', views.single_history),
+    path('rank_que', views.rank_que),
+    path('rank_sol', views.rank_sol),
 ]

@@ -1,6 +1,8 @@
 from .models import WrongQuestions, done_question, UserApproveSolution
 from rest_framework import serializers
 from models.basic.questions import Question, SubQuestion, Solution
+from models.basic.user import WXUser
+
 from rest_framework.serializers import SerializerMethodField
 
 
@@ -117,3 +119,15 @@ class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubQuestion
         fields = ['number', 'answer']
+
+
+class rankQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WXUser
+        fields = ['user_name', 'rank_question']
+
+
+class rankSolutionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WXUser
+        fields = ['user_name', 'rank_solution']

@@ -1,6 +1,7 @@
 import json
 import datetime
 import requests
+from math import ceil
 
 from django.http import JsonResponse
 from django.views.generic.base import View
@@ -496,22 +497,36 @@ def statistics(request):
 
 
 def rank_que(request):
-    rank_list = WXUser.objects.all().order_by("rank_question")[0:19]
-    serializer = rankQuestionSerializer(rank_list, many=True)
+    page_number = request.GET['pagenumber']
+    rank_page = ceil(WXUser.objects.count() / 12)
+
+    rank_list = WXUser.objects.all().order_by("rank_question").reverse()
+
+    paginator = Paginator(rank_list, 12)
+    select_list = paginator.get_page(page_number).object_list
+    serializer = rankSolutionSerializer(select_list, many=True)
 
     data = {
-        'rank_que_list': json.loads(json.dumps(serializer.data))
+        'rank_que_list': json.loads(json.dumps(serializer.data)),
+        'page_all': rank_page
     }
 
     return JsonResponse(data=wrap_response_data(0, **data))
 
 
 def rank_sol(request):
-    rank_list = WXUser.objects.all().order_by("rank_solution")[0:19]
-    serializer = rankSolutionSerializer(rank_list, many=True)
+    page_number = request.GET['pagenumber']
+    rank_page = ceil(WXUser.objects.count() / 12)
+
+    rank_list = WXUser.objects.all().order_by("rank_solution").reverse()
+
+    paginator = Paginator(rank_list, 12)
+    select_list = paginator.get_page(page_number).object_list
+    serializer = rankSolutionSerializer(select_list, many=True)
 
     data = {
-        'rank_sol_list': json.loads(json.dumps(serializer.data))
+        'rank_sol_list': json.loads(json.dumps(serializer.data)),
+        'page_all': rank_page
     }
 
     return JsonResponse(data=wrap_response_data(0, **data))

@@ -6,6 +6,6 @@
     "username": "Guborrow"
   },
 
-  "test_api": "/api/user/rank_sol",
+  "test_api": "/api/user/rank_sol?pagenumber=1",
   "data": ""
 }

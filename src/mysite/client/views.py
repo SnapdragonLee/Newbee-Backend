@@ -1,7 +1,6 @@
 import json
 import datetime
 import requests
-from math import ceil
 
 from django.http import JsonResponse
 from django.views.generic.base import View
@@ -498,7 +497,7 @@ def statistics(request):
 
 def rank_que(request):
     page_number = request.GET['pagenumber']
-    rank_page = ceil(WXUser.objects.count() / 12)
+    rank_page = WXUser.objects.count()
 
     rank_list = WXUser.objects.all().order_by("rank_question").reverse()
 
@@ -516,7 +515,7 @@ def rank_que(request):
 
 def rank_sol(request):
     page_number = request.GET['pagenumber']
-    rank_page = ceil(WXUser.objects.count() / 12)
+    rank_page = WXUser.objects.count()
 
     rank_list = WXUser.objects.all().order_by("rank_solution").reverse()
 

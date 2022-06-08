@@ -7,7 +7,6 @@ from django.dispatch import receiver, Signal
 from models.basic.user import WXUser
 from utils.defines import CHOICE_QUE_NAME, CLOZE_QUE_NAME, READING_QUE_NAME
 
-
 class Question(models.Model):
     id = models.AutoField(verbose_name='题目id', primary_key=True)
     title = models.TextField(verbose_name='题目标题', null=False)

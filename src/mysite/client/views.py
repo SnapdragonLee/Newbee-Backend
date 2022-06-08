@@ -1,5 +1,6 @@
 import json
 import datetime
+
 import requests
 from math import ceil
 
@@ -10,6 +11,8 @@ from django.db import transaction
 from django.core.paginator import Paginator
 
 from .models import WrongQuestions, ListOfQuestion, history, done_question, UserApproveSolution
+from .sensor import sensor
+
 from models.basic.user import WXUser
 from models.basic.notice import Notice
 from models.basic.questions import Question, SubQuestion, Solution
@@ -142,9 +145,14 @@ class SolutionViewClass(View):
             post_data = json.loads(request.body)
             sub_que_id = post_data['id']
             content = post_data['solution']
+
         except Exception as e:
             print(e.args)
             return JsonResponse(data=wrap_response_data(3, 'json参数格式错误'))
+
+        check_valid = sensor(content)
+        if check_valid['status'] != '1':
+            return JsonResponse(data=wrap_response_data(3, check_valid['invalid_reason']))
 
         try:
             sub_que_obj = SubQuestion.objects.get(id__exact=sub_que_id)

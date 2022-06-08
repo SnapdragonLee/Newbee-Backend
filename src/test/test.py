@@ -73,7 +73,7 @@ def login():
 
     if resp.status_code == 200:
         verify = json.loads(resp.content.decode("utf-8"), parse_int=str)
-        out("return code(ret)：%s，login attempt success!" % verify["ret"])
+        out("return code(ret)：%s, login attempt success!" % verify["ret"])
         out("return message(msg)：%s" % verify["msg"])
 
     else:

@@ -45,7 +45,7 @@ def login():
 def sensor(obj: str):
     return_data = {
         'status': '',
-        'invalid_reason': []
+        'invalid_reason': ''
     }
 
     for i in range(0, 5):
@@ -66,16 +66,16 @@ def sensor(obj: str):
             elif verify['conclusionType'] == '2':
                 return_data['status'] = '0'
                 for key in verify['data']:
-                    return_data['invalid_reason'].append(key['msg'])
+                    return_data['invalid_reason'] += key['msg'] + '\n'
 
             return return_data
 
         else:
             return_data['status'] = '0'
-            return_data['invalid_reason'].append('服务器无网络连接，请联系后台管理员')
+            return_data['invalid_reason'] += '服务器无网络连接，请联系后台管理员'
             return return_data
 
     return_data['status'] = '1'
-    return_data['invalid_reason'].append('服务器产生未知错误，请联系ld检查这部分什么问题')
+    return_data['invalid_reason'] += '服务器产生未知错误，请联系ld检查这部分什么问题'
     return return_data
     pass

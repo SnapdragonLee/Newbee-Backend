@@ -29,7 +29,6 @@ with open(BASE_DIR / 'settings.json') as f:
     baidu_sensor_id = setting['baidu_sensor_id']
     baidu_sensor_secret = setting['baidu_sensor_secret']
     baidu_sensor_grant_type = setting['baidu_sensor_grant_type']
-    baidu_sensor_access_token = ""
 
 pymysql.install_as_MySQLdb()
 

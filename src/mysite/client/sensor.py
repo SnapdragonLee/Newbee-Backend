@@ -7,8 +7,6 @@ import mysite.settings as ms
 login_api = 'https://aip.baidubce.com/oauth/2.0/token'
 test_api = 'https://aip.baidubce.com/rest/2.0/solution/v1/text_censor/v2/user_defined'
 
-baidu_sensor_access_token = ""
-
 gLogin_data = {
     'grant_type': ms.baidu_sensor_grant_type,
     'client_id': ms.baidu_sensor_id,
@@ -16,7 +14,7 @@ gLogin_data = {
 }
 
 gTest_data = {
-    'access_token': baidu_sensor_access_token,
+    'access_token': '',
     'text': ''
 }
 
@@ -40,8 +38,8 @@ def login():
 
     if resp.status_code == 200:
         verify = json.loads(resp.content.decode('utf-8'), parse_int=str)
-        global baidu_sensor_access_token
-        baidu_sensor_access_token = verify['access_token']
+        global gTest_data
+        gTest_data['access_token'] = verify['access_token']
 
 
 def sensor(obj: str):

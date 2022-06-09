@@ -1,0 +1,14 @@
+{
+  "test_actor": "user",
+  "type": "post",
+  "login_data": {
+    "code": "031Wsq100T14MN1Zac000hp2RW2Wsq1Y",
+    "username": "Guborrow"
+  },
+
+  "test_api": "/api/user/solution",
+  "data": {
+    "id":"15",
+    "solution":"我是傻逼"
+  }
+}

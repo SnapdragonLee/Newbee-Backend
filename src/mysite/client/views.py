@@ -141,6 +141,8 @@ class SolutionViewClass(View):
 
     @method_decorator(user_logged)
     def post(self, request):
+        # request.session['openid'] = ''
+
         try:
             post_data = json.loads(request.body)
             sub_que_id = post_data['id']

@@ -22,6 +22,8 @@ gTest_data = {
 
 headerB = {'Content-Type': 'application/x-www-form-urlencoded'}
 
+req = requests.session()
+
 
 def encode_formdata(obj):
     str_t = []
@@ -34,7 +36,7 @@ def encode_formdata(obj):
 
 def login():
     login_data = encode_formdata(gLogin_data)
-    resp = requests.session().post(url=login_api, headers=headerB, data=login_data)
+    resp = req.post(url=login_api, headers=headerB, data=login_data)
 
     if resp.status_code == 200:
         verify = json.loads(resp.content.decode('utf-8'), parse_int=str)
@@ -50,7 +52,7 @@ def sensor(obj: str):
 
     gTest_data['text'] = obj
     test_data = encode_formdata(gTest_data).encode('utf8')
-    resp = requests.session().post(url=test_api, headers=headerB, data=test_data)
+    resp = req.post(url=test_api, headers=headerB, data=test_data)
 
     if resp.status_code == 200:
         verify = json.loads(resp.content.decode('utf-8'), parse_int=str)

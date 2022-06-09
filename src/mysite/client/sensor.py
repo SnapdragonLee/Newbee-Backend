@@ -50,28 +50,34 @@ def sensor(obj: str):
         'invalid_reason': []
     }
 
-    gTest_data['text'] = obj
-    test_data = encode_formdata(gTest_data).encode('utf8')
-    resp = req.post(url=test_api, headers=headerB, data=test_data)
+    for i in range(0, 5):
+        gTest_data['text'] = obj
+        test_data = encode_formdata(gTest_data).encode('utf8')
+        resp = req.post(url=test_api, headers=headerB, data=test_data)
 
-    if resp.status_code == 200:
-        verify = json.loads(resp.content.decode('utf-8'), parse_int=str)
+        if resp.status_code == 200:
+            verify = json.loads(resp.content.decode('utf-8'), parse_int=str)
 
-        if 'error_code' in verify.keys():
-            login()
-            return sensor(obj)
+            if 'error_code' in verify.keys():
+                login()
+                continue
 
-        elif verify['conclusionType'] == '1':
-            return_data['status'] = '1'
+            elif verify['conclusionType'] == '1':
+                return_data['status'] = '1'
 
-        elif verify['conclusionType'] == '2':
+            elif verify['conclusionType'] == '2':
+                return_data['status'] = '0'
+                for key in verify['data']:
+                    return_data['invalid_reason'].append(key['msg'])
+
+            return return_data
+
+        else:
             return_data['status'] = '0'
-            for key in verify['data']:
-                return_data['invalid_reason'].append(key['msg'])
+            return_data['invalid_reason'].append('服务器无网络连接，请联系后台管理员')
+            return return_data
 
-        return return_data
-
-    else:
-        return_data['status'] = '0'
-        return_data['invalid_reason'].append('服务器无网络连接，请联系后台管理员')
-        return return_data
+    return_data['status'] = '1'
+    return_data['invalid_reason'].append('服务器产生未知错误，请联系ld检查这部分什么问题')
+    return return_data
+    pass

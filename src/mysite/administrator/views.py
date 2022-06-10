@@ -72,6 +72,7 @@ class ListUser(View):
         page_size = request.GET['pagesize']
         sort_type = request.GET.get('sorttype')
         sort_name = request.GET.get('sortname')
+        name = request.GET.get('name')
 
         name_map = {
             'numc': 'total_cloze',
@@ -86,7 +87,10 @@ class ListUser(View):
             if int(sort_type) == 0:
                 order_method_str = '-' + order_method_str
 
-        query_set = WXUser.objects.all().order_by(order_method_str)
+        if name is None:
+            query_set = WXUser.objects.all().order_by(order_method_str)
+        else:
+            query_set = WXUser.objects.filter(user_name__contains=name).order_by(order_method_str)
 
         data = get_user_list(page_number, page_size, query_set)
         return JsonResponse(data=wrap_response_data(0, **data))

@@ -32,6 +32,7 @@ from mysite.settings import APPID, SECRET
 def user_login(request):
     appid = APPID
     secret = SECRET
+    openid = ''
 
     try:
         post_data = json.loads(request.body)
@@ -41,16 +42,20 @@ def user_login(request):
         print(e.args)
         return JsonResponse(data=wrap_response_data(3, 'json格式错误'))
 
-    url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid \
-          + '&secret=' + secret + '&js_code=' + code + '&grant_type=authorization_code'
-    print(code)
-    response = json.loads(requests.get(url).content)
+    if not WXUser.objects.filter(id=code):
+        url = 'https://api.weixin.qq.com/sns/jscode2session' + '?appid=' + appid \
+              + '&secret=' + secret + '&js_code=' + code + '&grant_type=authorization_code'
+        print(code)
+        response = json.loads(requests.get(url).content)
 
-    if 'errcode' in response:
-        return JsonResponse(data=wrap_response_data(3, '获取openid失败'))
+        if 'errcode' in response:
+            return JsonResponse(data=wrap_response_data(3, '获取openid失败'))
 
-    openid = response['openid']
-    session_key = response['session_key']
+        openid = response['openid']
+        session_key = response['session_key']
+
+    else :
+        openid = code
 
     try:
         with transaction.atomic():

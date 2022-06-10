@@ -4,11 +4,11 @@ import json
 import time
 from urllib import parse
 
-test_actor = "client"  # something like "admin" \ "client"
-test_profile = "solution"  # you need to create json file in profile documents
+test_actor = "admin"  # something like "admin" \ "client"
+test_profile = "admin_graph"  # you need to create json file in profile documents
 
-main_addr = "http://127.0.0.1:8000"  # local server location
-# main_addr = "http://122.9.32.180"  # remote server location
+# main_addr = "http://127.0.0.1:8000"  # local server location
+main_addr = "http://122.9.32.180"  # remote server location
 
 ##################################################################################################
 
@@ -16,7 +16,7 @@ test_profile_path = os.path.abspath(r"./" + test_actor + "/profile/" + test_prof
 profile = json.load(open(test_profile_path, "rb"), parse_int=str)
 
 gLogin_data = profile["login_data"]
-gLogin_url = main_addr + "/api/user/login"
+gLogin_url = main_addr + "/api/admin/login"
 
 test_api = main_addr + profile["test_api"]
 # You can simulate many choices like "gLogin_url":
@@ -102,6 +102,8 @@ def test():
 
 
 if __name__ == "__main__":
-    # login()
+    login()
     print("\n")
+
+    '''for i in range(0, 1000):'''
     test()

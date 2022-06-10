@@ -2,10 +2,10 @@
   "test_actor": "user",
   "type": "get",
   "login_data": {
-    "code": "031Wsq100T14MN1Zac000hp2RW2Wsq1Y",
-    "username": "Guborrow"
+    "code": "",
+    "username": "圍棋少年李霄龍"
   },
 
-  "test_api": "/api/user/get_question&type=CHOICE_QUE_NAME",
+  "test_api": "/api/user/get_question?type=reading_question",
   "data": ""
 }

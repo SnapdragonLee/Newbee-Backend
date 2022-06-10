@@ -2,8 +2,8 @@
   "test_actor": "admin",
   "type": "post",
   "login_data": {
-    "name": "000",
-    "pwd": "12345678"
+    "name": "",
+    "pwd": ""
   },
 
   "test_api": "/api/admin/login",

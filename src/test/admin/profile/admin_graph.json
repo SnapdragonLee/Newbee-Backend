@@ -1,11 +1,11 @@
 {
   "test_actor": "admin",
-  "type": "delete",
+  "type": "get",
   "login_data": {
     "name": "",
     "pwd": ""
   },
 
-  "test_api": "/api/admin/logout",
+  "test_api": "/api/admin/graph",
   "data": ""
 }

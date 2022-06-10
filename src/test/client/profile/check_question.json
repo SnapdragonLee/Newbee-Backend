@@ -1,0 +1,55 @@
+{
+  "test_actor": "user",
+  "type": "post",
+  "login_data": {
+    "code": "",
+    "username": "圍棋少年李霄龍"
+  },
+  "test_api": "/api/user/check_question",
+  "data": {
+    "type": "cloze_question",
+    "id": "26",
+    "data": [
+      {
+        "sub_id": "40",
+        "submit": "D"
+      },
+      {
+        "sub_id": "41",
+        "submit": "A"
+      },
+      {
+        "sub_id": "42",
+        "submit": "B"
+      },
+      {
+        "sub_id": "43",
+        "submit": "C"
+      },
+      {
+        "sub_id": "44",
+        "submit": "D"
+      },
+      {
+        "sub_id": "45",
+        "submit": "A"
+      },
+      {
+        "sub_id": "46",
+        "submit": "A"
+      },
+      {
+        "sub_id": "47",
+        "submit": "C"
+      },
+      {
+        "sub_id": "48",
+        "submit": "D"
+      },
+      {
+        "sub_id": "49",
+        "submit": "B"
+      }
+    ]
+  }
+}

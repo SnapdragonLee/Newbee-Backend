@@ -11,7 +11,7 @@
 | Main                | [SnapdragonLee/Newbee-English (github.com)](https://github.com/SnapdragonLee/Newbee-English) |
 | Backend             | [SnapdragonLee/Newbee-backend (github.com)](https://github.com/SnapdragonLee/Newbee-backend) |
 | Frontend            | [zrjzrj0403/Newbee-Frontend (github.com)](https://github.com/zrjzrj0403/Newbee-Frontend) |
-| Weixin Mini Program | [edwardyangjh/miniprogram_Newbee English (gitee.com)](https://gitee.com/edwardyangjh/newbee-english) |
+| Weixin Mini Program | [SnapdragonLee/Newbee-MiniProgram (github.com)](https://github.com/SnapdragonLee/Newbee-MiniProgram) |
 
 
 
